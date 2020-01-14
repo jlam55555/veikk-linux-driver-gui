@@ -8,6 +8,9 @@
 #include <QMainWindow>
 #include <QGraphicsView>
 #include <QDoubleSpinBox>
+#include <QLineEdit>
+#include <QScreen>
+#include <QCheckBox>
 
 QT_BEGIN_NAMESPACE
 namespace Ui { class MainWindow; }
@@ -29,17 +32,30 @@ private:
 
     // control elements
     QDoubleSpinBox *pressureCoefSpinboxes[4];
+    QSpinBox *screenMapXSpinBox, *screenMapYSpinBox,
+             *screenMapWidthSpinBox, *screenMapHeightSpinBox,
+             *screenMapSpinboxes[4];
+    QLineEdit *screenWidthLineEdit, *screenHeightLineEdit;
+    QCheckBox *screenDefaultMap;
 
     // handlers
     void showEvent(QShowEvent *evt) override;
     void resizeEvent(QResizeEvent *evt) override;
 
+    // other
+    QScreen *screen;
+
 public slots:
+    void screenSizeChanged(QRect newScreenSize);
     void tabChanged(int curTab);
     void updatePressureForm(qint16 *newCoefs);
     void updatePressureCoefs();
+    void updateScreenMapForm(QRect newScreenMap);
+    void updateScreenMapParms();
+    void setDefaultScreenMap(int checkState);
 
 signals:
     void updatePressureCurve(qint16 *newCoefs);
+    void updateScreenMapRect(QRect newScreenMap);
 };
 #endif // MAINWINDOW_H

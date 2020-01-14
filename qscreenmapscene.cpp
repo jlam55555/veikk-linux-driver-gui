@@ -2,15 +2,13 @@
 #include <QGraphicsPixmapItem>
 #include <QTimer>
 #include <QScreen>
-#include <QGuiApplication>
 #include <QGraphicsSceneMouseEvent>
 
-QScreenMapScene::QScreenMapScene()
-    : QGraphicsScene{} {
+QScreenMapScene::QScreenMapScene(QScreen *screen)
+    : QGraphicsScene{}, screen{screen} {
     QTimer *timer;
 
-    // TODO: make dynamic and resize on screen resize
-    setSceneRect(QRectF{0, 0, 1920, 1080});
+    setSceneRect(screen->geometry());
 
     // initialize screen pixmap
     pixmapItem = new QGraphicsPixmapItem{QPixmap{0, 0}};
@@ -24,31 +22,28 @@ QScreenMapScene::QScreenMapScene()
 
     // set up selection rectangle
     isSelecting = false;
-    selectionRect = nullptr;
+    selectionRect = addRect(screen->geometry());
+    selectionRect->setBrush(QBrush{QColor{255, 0, 0, 50}});
 }
 
 void QScreenMapScene::updateScreenMapPreview() {
-    QScreen *screen;
-    QPixmap pixmap;
-
-    // TODO: make sure first screen is always correct
-    screen = QGuiApplication::screens().first();
-    pixmap = screen->grabWindow(0).scaled(sceneRect().size().toSize(),
-                                          Qt::KeepAspectRatio,
-                                          Qt::FastTransformation);
+    QPixmap pixmap = screen->grabWindow(0).scaled(sceneRect().size().toSize(),
+                                                  Qt::KeepAspectRatio,
+                                                  Qt::FastTransformation);
     pixmapItem->setPixmap(pixmap);
 }
 
+void QScreenMapScene::updateScreenMapRect(QRect newScreenMap) {
+    selectionRect->setRect(newScreenMap);
+}
+
 void QScreenMapScene::mousePressEvent(QGraphicsSceneMouseEvent *evt) {
-    if(selectionRect)
-        delete selectionRect;
     selectionStart = evt->scenePos();
-    selectionRect = addRect(QRectF{selectionStart, selectionStart});
-    selectionRect->setBrush(QBrush{QColor{255, 0, 0, 50}});
+    selectionRect->setRect(QRectF{selectionStart, selectionStart});
     isSelecting = true;
 }
 void QScreenMapScene::mouseMoveEvent(QGraphicsSceneMouseEvent *evt) {
-    if(!isSelecting || !selectionRect)
+    if(!isSelecting)
         return;
     selectionRect->setRect(QRectF{evt->scenePos(), selectionStart}
                            .normalized());
@@ -56,5 +51,5 @@ void QScreenMapScene::mouseMoveEvent(QGraphicsSceneMouseEvent *evt) {
 void QScreenMapScene::mouseReleaseEvent(__attribute__((unused))
                                         QGraphicsSceneMouseEvent *evt) {
     isSelecting = false;
-    emit updateScreenMap(selectionRect->rect().toRect());
+    emit updateScreenMapForm(selectionRect->rect().toRect());
 }
