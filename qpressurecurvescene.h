@@ -17,9 +17,10 @@ private:
 
     qreal curveFn(qreal x);
     void findCoefs();
+    void repositionControlPoints();
 
 private slots:
-    void updatePressureCurve();
+    void updatePressureCurve(qint16 *);
 
 signals:
     void updatePressureForm(qint16 *);

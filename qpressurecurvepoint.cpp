@@ -1,8 +1,16 @@
 #include "qpressurecurvepoint.h"
 #include <QGraphicsSceneMouseEvent>
 
-QPressureCurvePoint::QPressureCurvePoint(const QRectF &rect)
-    : QGraphicsRectItem{rect}, isDragging{false}, size{rect.width()} { }
+QPressureCurvePoint::QPressureCurvePoint(QPointF center, qreal size)
+    : QGraphicsRectItem{QRectF{center.x()-size/2, center.y()-size/2,
+                               size, size}},
+      isDragging{false}, size{size} { }
+
+void QPressureCurvePoint::moveCenter(QPointF newCenter) {
+    QRectF newRect = rect();
+    newRect.moveCenter(newCenter);
+    setRect(newRect);
+}
 
 void QPressureCurvePoint::mousePressEvent(__attribute__((unused))
                                           QGraphicsSceneMouseEvent *evt) {
@@ -11,7 +19,7 @@ void QPressureCurvePoint::mousePressEvent(__attribute__((unused))
 void QPressureCurvePoint::mouseMoveEvent(QGraphicsSceneMouseEvent *evt) {
     if(!isDragging) return;
     setRect(QRectF{evt->pos().x()-size/2, evt->pos().y()-size/2, size, size});
-    emit updatePressureCurve();
+    emit updatePressureCurve(nullptr);
 }
 void QPressureCurvePoint::mouseReleaseEvent(__attribute__((unused))
                                             QGraphicsSceneMouseEvent *evt) {

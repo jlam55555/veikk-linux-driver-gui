@@ -12,18 +12,18 @@ QPressureCurveScene::QPressureCurveScene()
 
     // set up points
     for(i=0; i<4; i++) {
-        points[i] = new QPressureCurvePoint{QRectF{i/4.0, i/4.0, 0.05, 0.05}};
+        points[i] = new QPressureCurvePoint{QPointF{i/3.0, i/3.0}, 0.05};
         points[i]->setBrush(QBrush{Qt::red});
         points[i]->setPen(QPen{Qt::transparent});
-        connect(points[i], SIGNAL(updatePressureCurve()),
-                this, SLOT(updatePressureCurve()));
+        connect(points[i], SIGNAL(updatePressureCurve(qint16 *)),
+                this, SLOT(updatePressureCurve(qint16 *)));
         addItem(points[i]);
     }
 
     // set up curve
     curve = addPath(QPainterPath{});
     curve->setPen(QPen{QBrush{Qt::blue}, 0.01});
-    updatePressureCurve();
+    updatePressureCurve(nullptr);
 
     // set up border rect
     border = addRect(QRectF{0, 0, 1, 1});
@@ -31,17 +31,23 @@ QPressureCurveScene::QPressureCurveScene()
 }
 
 qreal QPressureCurveScene::curveFn(qreal x) {
-    return (curveCoefs[0]*x*x*x
-          + curveCoefs[1]*x*x
-          + curveCoefs[2]*x
-          + curveCoefs[3])/100;
+    return (curveCoefs[0]
+          + curveCoefs[1]*x
+          + curveCoefs[2]*x*x
+          + curveCoefs[3]*x*x*x)/100;
 }
 
-void QPressureCurveScene::updatePressureCurve() {
+// called by form on update with newCoefs, called by moving points with nullptr
+void QPressureCurveScene::updatePressureCurve(qint16 *newCoefs) {
     qreal x, y, granularity=0.02;
     QPainterPath path;
 
-    findCoefs();
+    if(newCoefs == nullptr)
+        findCoefs();
+    else {
+        memcpy(curveCoefs, newCoefs, 4*sizeof(qint16));
+        repositionControlPoints();
+    }
 
     path.clear();
     for(x=0; x<1; x+=granularity) {
@@ -63,7 +69,7 @@ void QPressureCurveScene::findCoefs() {
     // generate coefficient matrix a
     for(i=0; i<4; i++) {
         for(j=0; j<4; j++)
-            a[i][j] = pow(points[i]->rect().center().x(), 3-j);
+            a[i][j] = pow(points[i]->rect().center().x(), j);
         b[i] = points[i]->rect().center().y();
     }
 
@@ -94,4 +100,10 @@ void QPressureCurveScene::findCoefs() {
     }
 
     emit updatePressureForm(curveCoefs);
+}
+
+void QPressureCurveScene::repositionControlPoints() {
+    qint8 i;
+    for(i=0; i<4; i++)
+        points[i]->moveCenter(QPointF{i/3.0, curveFn(i/3.0)});
 }

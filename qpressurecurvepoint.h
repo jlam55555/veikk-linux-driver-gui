@@ -12,7 +12,8 @@ class QPressureCurvePoint
     Q_OBJECT
 
 public:
-    QPressureCurvePoint(const QRectF &rect);
+    QPressureCurvePoint(QPointF center, qreal size);
+    void moveCenter(QPointF newCenter);
     QRectF boundingRect() const override;
 
 private:
@@ -24,7 +25,7 @@ private:
     void mouseReleaseEvent(QGraphicsSceneMouseEvent *evt) override;
 
 signals:
-    void updatePressureCurve();
+    void updatePressureCurve(qint16 *);
 };
 
 #endif // QPRESSURECURVEPOINT_H

@@ -22,7 +22,7 @@
    </property>
    <layout class="QHBoxLayout" name="horizontalLayout">
     <item>
-     <widget class="QTabWidget" name="tabWidget">
+     <widget class="QTabWidget" name="tab_widget">
       <property name="minimumSize">
        <size>
         <width>700</width>
@@ -325,7 +325,17 @@
                   </widget>
                  </item>
                  <item row="0" column="1">
-                  <widget class="QDoubleSpinBox" name="doubleSpinBox"/>
+                  <widget class="QDoubleSpinBox" name="pressure_coef_a3">
+                   <property name="minimum">
+                    <double>-327.680000000000007</double>
+                   </property>
+                   <property name="maximum">
+                    <double>327.670000000000016</double>
+                   </property>
+                   <property name="singleStep">
+                    <double>0.010000000000000</double>
+                   </property>
+                  </widget>
                  </item>
                  <item row="1" column="0">
                   <widget class="QLabel" name="label_11">
@@ -335,7 +345,17 @@
                   </widget>
                  </item>
                  <item row="1" column="1">
-                  <widget class="QDoubleSpinBox" name="doubleSpinBox_2"/>
+                  <widget class="QDoubleSpinBox" name="pressure_coef_a2">
+                   <property name="minimum">
+                    <double>-327.680000000000007</double>
+                   </property>
+                   <property name="maximum">
+                    <double>327.670000000000016</double>
+                   </property>
+                   <property name="singleStep">
+                    <double>0.010000000000000</double>
+                   </property>
+                  </widget>
                  </item>
                  <item row="2" column="0">
                   <widget class="QLabel" name="label_12">
@@ -345,7 +365,20 @@
                   </widget>
                  </item>
                  <item row="2" column="1">
-                  <widget class="QDoubleSpinBox" name="doubleSpinBox_3"/>
+                  <widget class="QDoubleSpinBox" name="pressure_coef_a1">
+                   <property name="minimum">
+                    <double>-327.680000000000007</double>
+                   </property>
+                   <property name="maximum">
+                    <double>327.670000000000016</double>
+                   </property>
+                   <property name="singleStep">
+                    <double>0.010000000000000</double>
+                   </property>
+                   <property name="value">
+                    <double>1.000000000000000</double>
+                   </property>
+                  </widget>
                  </item>
                  <item row="3" column="0">
                   <widget class="QLabel" name="label_13">
@@ -355,7 +388,17 @@
                   </widget>
                  </item>
                  <item row="3" column="1">
-                  <widget class="QDoubleSpinBox" name="doubleSpinBox_4"/>
+                  <widget class="QDoubleSpinBox" name="pressure_coef_a0">
+                   <property name="minimum">
+                    <double>-327.680000000000007</double>
+                   </property>
+                   <property name="singleStep">
+                    <double>0.010000000000000</double>
+                   </property>
+                   <property name="value">
+                    <double>0.000000000000000</double>
+                   </property>
+                  </widget>
                  </item>
                  <item row="4" column="0">
                   <widget class="QLabel" name="label_17">
