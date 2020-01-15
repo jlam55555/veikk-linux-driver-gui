@@ -13,6 +13,15 @@
 #include <QCheckBox>
 #include <QComboBox>
 
+// supported modparm types
+typedef enum {
+    VEIKK_MP_SCREEN_MAP,
+    VEIKK_MP_SCREEN_SIZE,
+    VEIKK_MP_PRESSURE_MAP,
+    VEIKK_MP_ORIENTATION,
+    VEIKK_MP_ALL
+} ModparmType;
+
 QT_BEGIN_NAMESPACE
 namespace Ui { class MainWindow; }
 QT_END_NAMESPACE
@@ -26,6 +35,7 @@ public:
 
 private:
     Ui::MainWindow *ui;
+    QScreen *screen;
 
     // relevant elements
     QTabWidget *tabWidget;
@@ -44,22 +54,25 @@ private:
     void showEvent(QShowEvent *evt) override;
     void resizeEvent(QResizeEvent *evt) override;
 
-    // other
-    QScreen *screen;
+    // composite parameter value getters
+    void getPressureCoefs(qint16 *coefs);
+    QRect getScreenMapParms();
+    QString getExportFormat(ModparmType type);
+
+    // module parameter functions
+    int setSysfsModparm(QString parmName, QString value);
 
 public slots:
     void screenSizeChanged(QRect newScreenSize);
     void tabChanged(int curTab);
     void updatePressureForm(qint16 *newCoefs);
-    void getPressureCoefs(qint16 *coefs);
     void updatePressureCoefs();
     void updateScreenMapForm(QRect newScreenMap);
-    QRect getScreenMapParms();
     void updateScreenMapParms();
     void setDefaultScreenMap(int checkState);
 
-    void exportConfig();
-
+    void exportConfig(ModparmType type);
+    void exportConfigToFile(QString &dest);
 signals:
     void updatePressureCurve(qint16 *newCoefs);
     void updateScreenMapRect(QRect newScreenMap);

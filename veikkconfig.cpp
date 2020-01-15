@@ -4,6 +4,7 @@
 #include "qscreenmapscene.h"
 #include <QScreen>
 #include <QGuiApplication>
+#include <QFile>
 #include <QDebug>
 
 // set up widgets, hook up handlers
@@ -15,33 +16,38 @@ MainWindow::MainWindow(QWidget *parent)
     ui->setupUi(this);
 
     screen = QGuiApplication::screens().first();
-    connect(screen, SIGNAL(geometryChanged(QRect)),
-            this, SLOT(screenSizeChanged(QRect)));
+    connect(screen, &QScreen::geometryChanged,
+            this, &MainWindow::screenSizeChanged);
 
     tabWidget = findChild<QTabWidget *>("tab_widget");
-    connect(tabWidget, SIGNAL(currentChanged(int)),
-            this, SLOT(tabChanged(int)));
+    connect(tabWidget, &QTabWidget::currentChanged,
+            this, &MainWindow::tabChanged);
 
     pressureCurveView = findChild<QGraphicsView *>("pressure_curve_view");
     pressureCurveView->setScene(new QPressureCurveScene{});
     pressureCurveView->scale(1, -1);
-    connect(pressureCurveView->scene(), SIGNAL(updatePressureForm(qint16 *)),
-            this, SLOT(updatePressureForm(qint16 *)));
-    connect(this, SIGNAL(updatePressureCurve(qint16 *)),
-            pressureCurveView->scene(), SLOT(updatePressureCurve(qint16 *)));
+    connect(static_cast<QPressureCurveScene *>(pressureCurveView->scene()),
+            &QPressureCurveScene::updatePressureForm,
+            this, &MainWindow::updatePressureForm);
+    connect(this, &MainWindow::updatePressureCurve,
+            static_cast<QPressureCurveScene *>(pressureCurveView->scene()),
+            &QPressureCurveScene::updatePressureCurve);
 
     screenMapView = findChild<QGraphicsView *>("screen_map_view");
     screenMapView->setScene(new QScreenMapScene{screen});
-    connect(screenMapView->scene(), SIGNAL(updateScreenMapForm(QRect)),
-            this, SLOT(updateScreenMapForm(QRect)));
-    connect(this, SIGNAL(updateScreenMapRect(QRect)),
-            screenMapView->scene(), SLOT(updateScreenMapRect(QRect)));
+    connect(static_cast<QScreenMapScene *>(screenMapView->scene()),
+            &QScreenMapScene::updateScreenMapForm,
+            this, &MainWindow::updateScreenMapForm);
+    connect(this, &MainWindow::updateScreenMapRect,
+            static_cast<QScreenMapScene *>(screenMapView->scene()),
+            &QScreenMapScene::updateScreenMapRect);
 
     for(i=0; i<4; i++) {
         pressureCoefSpinboxes[i] = findChild<QDoubleSpinBox *>
                                     ("pressure_coef_a" + QString::number(i));
-        connect(pressureCoefSpinboxes[i], SIGNAL(valueChanged(double)),
-                this, SLOT(updatePressureCoefs()));
+        connect(pressureCoefSpinboxes[i],
+                QOverload<double>::of(&QDoubleSpinBox::valueChanged),
+                this, &MainWindow::updatePressureCoefs);
     }
 
     screenMapSpinboxes[0] = screenMapXSpinBox = findChild<QSpinBox *>
@@ -55,11 +61,11 @@ MainWindow::MainWindow(QWidget *parent)
     screenWidthLineEdit = findChild<QLineEdit *>("screen_width");
     screenHeightLineEdit = findChild<QLineEdit *>("screen_height");
     screenDefaultMap = findChild<QCheckBox *>("screen_default_map");
-    connect(screenDefaultMap, SIGNAL(stateChanged(int)),
-            this, SLOT(setDefaultScreenMap(int)));
+    connect(screenDefaultMap, &QCheckBox::stateChanged,
+            this, &MainWindow::setDefaultScreenMap);
     for(i=0; i<4; i++)
-        connect(screenMapSpinboxes[i], SIGNAL(editingFinished()),
-            this, SLOT(updateScreenMapParms()));
+        connect(screenMapSpinboxes[i], &QSpinBox::editingFinished,
+                this, &MainWindow::updateScreenMapParms);
     screenSizeChanged(screen->geometry());
     updateScreenMapForm(screen->geometry());
 
@@ -69,8 +75,8 @@ MainWindow::MainWindow(QWidget *parent)
     screenOrientation->addItem("Flipped");
     screenOrientation->addItem("90deg CW");
 
-    connect(findChild<QAction *>("action_apply_all"), SIGNAL(triggered()),
-            this, SLOT(exportConfig()));
+    connect(findChild<QAction *>("action_apply_all"), &QAction::triggered,
+            std::bind(&MainWindow::exportConfig, this, VEIKK_MP_ALL));
 }
 
 MainWindow::~MainWindow() {
@@ -87,6 +93,60 @@ void MainWindow::showEvent(QShowEvent *evt) {
 void MainWindow::resizeEvent(QResizeEvent *evt) {
     screenMapView->fitInView(screenMapView->sceneRect(), Qt::KeepAspectRatio);
     QWidget::resizeEvent(evt);
+}
+
+void MainWindow::getPressureCoefs(qint16 *coefs) {
+    qint8 i;
+    for(i=0; i<4; i++)
+        coefs[i] = qint16(pressureCoefSpinboxes[i]->value()*100);
+}
+QRect MainWindow::getScreenMapParms() {
+    return QRect{
+        screenMapXSpinBox->value(),
+        screenMapYSpinBox->value(),
+        screenMapWidthSpinBox->value(),
+        screenMapHeightSpinBox->value()
+    };
+}
+// get configuration options in format ready to export directly to the driver
+QString MainWindow::getExportFormat(ModparmType type) {
+    QRect screenSizeRect, screenMapRect;
+    qint16 pressureCoefs[4];
+
+    switch(type) {
+    case VEIKK_MP_ORIENTATION:
+        return QString::number(quint32(screenOrientation->currentIndex()));
+    case VEIKK_MP_SCREEN_SIZE:
+        screenSizeRect = screen->geometry();
+        return QString::number((quint32(screenSizeRect.width())<<16)
+                             | quint16(screenSizeRect.height()));
+    case VEIKK_MP_SCREEN_MAP:
+        screenMapRect = getScreenMapParms();
+        return QString::number((quint64(quint16(screenMapRect.x()))<<48)
+                             | (quint64(quint16(screenMapRect.y()))<<32)
+                             | (quint64(quint16(screenMapRect.width()))<<16)
+                             | quint16(screenMapRect.height()));
+    case VEIKK_MP_PRESSURE_MAP:
+        getPressureCoefs(pressureCoefs);
+        return QString::number((quint64(quint16(pressureCoefs[3]))<<48)
+                             | (quint64(quint16(pressureCoefs[2]))<<32)
+                             | (quint64(quint16(pressureCoefs[1]))<<16)
+                             | quint16(pressureCoefs[0]));
+    case VEIKK_MP_ALL:
+        return "";
+    }
+}
+
+int MainWindow::setSysfsModparm(QString parmName, QString value) {
+    const QString baseUrl = "/sys/module/veikk/parameters/";
+    QFile parmFile{baseUrl + parmName};
+
+    if(!parmFile.open(QIODevice::WriteOnly|QIODevice::Text))
+        return errno;
+    if(parmFile.write(value.toLocal8Bit().constData())<0)
+        return errno;
+    parmFile.close();
+    return 0;
 }
 
 void MainWindow::screenSizeChanged(QRect newScreenSize) {
@@ -120,12 +180,6 @@ void MainWindow::updatePressureForm(qint16 *newCoefs) {
     }
 }
 
-void MainWindow::getPressureCoefs(qint16 *coefs) {
-    qint8 i;
-    for(i=0; i<4; i++)
-        coefs[i] = qint16(pressureCoefSpinboxes[i]->value()*100);
-}
-
 void MainWindow::updatePressureCoefs() {
     qint16 newCoefs[4];
     getPressureCoefs(newCoefs);
@@ -146,14 +200,6 @@ void MainWindow::updateScreenMapForm(QRect newScreenMap) {
                                     ? Qt::Checked
                                     : Qt::Unchecked);
 }
-QRect MainWindow::getScreenMapParms() {
-    return QRect{
-        screenMapXSpinBox->value(),
-        screenMapYSpinBox->value(),
-        screenMapWidthSpinBox->value(),
-        screenMapHeightSpinBox->value()
-    };
-}
 
 void MainWindow::updateScreenMapParms() {
     QRect newScreenMap = getScreenMapParms();
@@ -170,34 +216,29 @@ void MainWindow::setDefaultScreenMap(int checkState) {
     emit updateScreenMapRect(screen->geometry());
 }
 
-// get configuration options in format ready to export directly to the driver
-void MainWindow::exportConfig() {
-    quint32 orientation, screenSize;
-    quint64 screenMap, pressureMap;
-    QRect screenSizeRect, screenMapRect;
-    qint16 pressureCoefs[4];
+void MainWindow::exportConfig(ModparmType type) {
+    qint32 ret=0;
+    QLabel *errLabel;
+    if(type==VEIKK_MP_ORIENTATION || type==VEIKK_MP_ALL)
+        ret = setSysfsModparm("orientation",
+                              getExportFormat(VEIKK_MP_ORIENTATION));
+    if(!ret && (type==VEIKK_MP_SCREEN_SIZE || type==VEIKK_MP_ALL))
+        ret = setSysfsModparm("screen_size",
+                              getExportFormat(VEIKK_MP_SCREEN_SIZE));
+    if(!ret && (type==VEIKK_MP_SCREEN_MAP || type==VEIKK_MP_ALL))
+        ret = setSysfsModparm("screen_map",
+                              getExportFormat(VEIKK_MP_SCREEN_MAP));
+    if(!ret && (type==VEIKK_MP_PRESSURE_MAP || type==VEIKK_MP_ALL))
+        ret = setSysfsModparm("pressure_map",
+                              getExportFormat(VEIKK_MP_PRESSURE_MAP));
 
-    // get orientation
-    orientation = quint32(screenOrientation->currentIndex());
+    // TODO: better error handling
+    if(ret) {
+        errLabel = new QLabel{strerror(ret)};
+        errLabel->show();
+    }
+}
 
-    // get screen size
-    screenSizeRect = screen->geometry();
-    screenSize = (quint32(screenSizeRect.width())<<16)
-               | quint16(screenSizeRect.height());
-
-    // get screen map
-    screenMapRect = getScreenMapParms();
-    screenMap = (quint64(quint16(screenMapRect.x()))<<48)
-              | (quint64(quint16(screenMapRect.y()))<<32)
-              | (quint64(quint16(screenMapRect.width()))<<16)
-              | quint16(screenMapRect.height());
-
-    // get pressure map
-    getPressureCoefs(pressureCoefs);
-    pressureMap = (quint64(quint16(pressureCoefs[3]))<<48)
-                | (quint64(quint16(pressureCoefs[2]))<<32)
-                | (quint64(quint16(pressureCoefs[1]))<<16)
-                | quint16(pressureCoefs[0]);
-
-    qInfo() << "result" << orientation << screenSize << screenMap << pressureMap;
+void MainWindow::exportConfigToFile(QString &dest) {
+    // TODO
 }

@@ -24,7 +24,7 @@ private:
     void mouseMoveEvent(QGraphicsSceneMouseEvent *evt) override;
     void mouseReleaseEvent(QGraphicsSceneMouseEvent *evt) override;
 
-private slots:
+public slots:
     void updateScreenMapPreview();
     void updateScreenMapRect(QRect newScreenMap);
 

@@ -19,7 +19,7 @@ private:
     void findCoefs();
     void repositionControlPoints();
 
-private slots:
+public slots:
     void updatePressureCurve(qint16 *);
 
 signals:

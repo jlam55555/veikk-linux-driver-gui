@@ -15,8 +15,8 @@ QPressureCurveScene::QPressureCurveScene()
         points[i] = new QPressureCurvePoint{QPointF{i/3.0, i/3.0}, 0.05};
         points[i]->setBrush(QBrush{Qt::red});
         points[i]->setPen(QPen{Qt::transparent});
-        connect(points[i], SIGNAL(updatePressureCurve(qint16 *)),
-                this, SLOT(updatePressureCurve(qint16 *)));
+        connect(points[i], &QPressureCurvePoint::updatePressureCurve,
+                this, &QPressureCurveScene::updatePressureCurve);
         addItem(points[i]);
     }
 

@@ -17,7 +17,8 @@ QScreenMapScene::QScreenMapScene(QScreen *screen)
     // update screen every 2000ms
     updateScreenMapPreview();
     timer = new QTimer{this};
-    connect(timer, SIGNAL(timeout()), this, SLOT(updateScreenMapPreview()));
+    connect(timer, &QTimer::timeout,
+            this, &QScreenMapScene::updateScreenMapPreview);
     timer->start(2000);
 
     // set up selection rectangle
