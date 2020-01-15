@@ -4,6 +4,7 @@
 #include "qscreenmapscene.h"
 #include <QScreen>
 #include <QGuiApplication>
+#include <QDebug>
 
 // set up widgets, hook up handlers
 MainWindow::MainWindow(QWidget *parent)
@@ -61,6 +62,15 @@ MainWindow::MainWindow(QWidget *parent)
             this, SLOT(updateScreenMapParms()));
     screenSizeChanged(screen->geometry());
     updateScreenMapForm(screen->geometry());
+
+    screenOrientation = findChild<QComboBox *>("screen_orientation");
+    screenOrientation->addItem("Default");
+    screenOrientation->addItem("90deg CCW");
+    screenOrientation->addItem("Flipped");
+    screenOrientation->addItem("90deg CW");
+
+    connect(findChild<QAction *>("action_apply_all"), SIGNAL(triggered()),
+            this, SLOT(exportConfig()));
 }
 
 MainWindow::~MainWindow() {
@@ -110,11 +120,15 @@ void MainWindow::updatePressureForm(qint16 *newCoefs) {
     }
 }
 
-void MainWindow::updatePressureCoefs() {
+void MainWindow::getPressureCoefs(qint16 *coefs) {
     qint8 i;
-    qint16 newCoefs[4];
     for(i=0; i<4; i++)
-        newCoefs[i] = qint16(pressureCoefSpinboxes[i]->value()*100);
+        coefs[i] = qint16(pressureCoefSpinboxes[i]->value()*100);
+}
+
+void MainWindow::updatePressureCoefs() {
+    qint16 newCoefs[4];
+    getPressureCoefs(newCoefs);
     emit updatePressureCurve(newCoefs);
 }
 
@@ -132,14 +146,17 @@ void MainWindow::updateScreenMapForm(QRect newScreenMap) {
                                     ? Qt::Checked
                                     : Qt::Unchecked);
 }
-
-void MainWindow::updateScreenMapParms() {
-    QRect newScreenMap = QRect{
+QRect MainWindow::getScreenMapParms() {
+    return QRect{
         screenMapXSpinBox->value(),
         screenMapYSpinBox->value(),
         screenMapWidthSpinBox->value(),
         screenMapHeightSpinBox->value()
     };
+}
+
+void MainWindow::updateScreenMapParms() {
+    QRect newScreenMap = getScreenMapParms();
     screenDefaultMap->setCheckState(newScreenMap==screen->geometry()
                                     ? Qt::Checked
                                     : Qt::Unchecked);
@@ -151,4 +168,36 @@ void MainWindow::setDefaultScreenMap(int checkState) {
         return;
     updateScreenMapForm(screen->geometry());
     emit updateScreenMapRect(screen->geometry());
+}
+
+// get configuration options in format ready to export directly to the driver
+void MainWindow::exportConfig() {
+    quint32 orientation, screenSize;
+    quint64 screenMap, pressureMap;
+    QRect screenSizeRect, screenMapRect;
+    qint16 pressureCoefs[4];
+
+    // get orientation
+    orientation = quint32(screenOrientation->currentIndex());
+
+    // get screen size
+    screenSizeRect = screen->geometry();
+    screenSize = (quint32(screenSizeRect.width())<<16)
+               | quint16(screenSizeRect.height());
+
+    // get screen map
+    screenMapRect = getScreenMapParms();
+    screenMap = (quint64(quint16(screenMapRect.x()))<<48)
+              | (quint64(quint16(screenMapRect.y()))<<32)
+              | (quint64(quint16(screenMapRect.width()))<<16)
+              | quint16(screenMapRect.height());
+
+    // get pressure map
+    getPressureCoefs(pressureCoefs);
+    pressureMap = (quint64(quint16(pressureCoefs[3]))<<48)
+                | (quint64(quint16(pressureCoefs[2]))<<32)
+                | (quint64(quint16(pressureCoefs[1]))<<16)
+                | quint16(pressureCoefs[0]);
+
+    qInfo() << "result" << orientation << screenSize << screenMap << pressureMap;
 }

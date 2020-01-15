@@ -11,6 +11,7 @@
 #include <QLineEdit>
 #include <QScreen>
 #include <QCheckBox>
+#include <QComboBox>
 
 QT_BEGIN_NAMESPACE
 namespace Ui { class MainWindow; }
@@ -37,6 +38,7 @@ private:
              *screenMapSpinboxes[4];
     QLineEdit *screenWidthLineEdit, *screenHeightLineEdit;
     QCheckBox *screenDefaultMap;
+    QComboBox *screenOrientation;
 
     // handlers
     void showEvent(QShowEvent *evt) override;
@@ -49,10 +51,14 @@ public slots:
     void screenSizeChanged(QRect newScreenSize);
     void tabChanged(int curTab);
     void updatePressureForm(qint16 *newCoefs);
+    void getPressureCoefs(qint16 *coefs);
     void updatePressureCoefs();
     void updateScreenMapForm(QRect newScreenMap);
+    QRect getScreenMapParms();
     void updateScreenMapParms();
     void setDefaultScreenMap(int checkState);
+
+    void exportConfig();
 
 signals:
     void updatePressureCurve(qint16 *newCoefs);

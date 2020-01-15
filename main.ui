@@ -218,7 +218,7 @@
                </widget>
               </item>
               <item row="1" column="1">
-               <widget class="QComboBox" name="comboBox"/>
+               <widget class="QComboBox" name="screen_orientation"/>
               </item>
              </layout>
             </widget>
@@ -648,7 +648,7 @@
     <property name="title">
      <string>&amp;Config</string>
     </property>
-    <addaction name="actionApply_all_changes"/>
+    <addaction name="action_apply_all"/>
     <addaction name="action_Load_config"/>
     <addaction name="action_Save"/>
     <addaction name="action_Save_as"/>
@@ -672,7 +672,7 @@
     <string>&amp;Save config</string>
    </property>
   </action>
-  <action name="actionApply_all_changes">
+  <action name="action_apply_all">
    <property name="text">
     <string>Apply all &amp;changes</string>
    </property>
