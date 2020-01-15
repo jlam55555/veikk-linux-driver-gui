@@ -20,7 +20,8 @@ SOURCES += \
     qpressurecurvepoint.cpp \
     qpressurecurvescene.cpp \
     qscreenmapscene.cpp \
-    veikkconfig.cpp
+    veikkconfig.cpp \
+    veikkparms.cpp
 
 HEADERS += \
     qpressurecurvepoint.h \
