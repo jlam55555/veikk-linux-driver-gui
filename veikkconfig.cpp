@@ -77,6 +77,12 @@ MainWindow::MainWindow(QWidget *parent)
 
     connect(findChild<QAction *>("action_apply_all"), &QAction::triggered,
             std::bind(&MainWindow::exportConfig, this, VEIKK_MP_ALL));
+    connect(findChild<QPushButton *>("apply_screen_changes"),
+            &QPushButton::clicked,
+            std::bind(&MainWindow::exportConfig, this, VEIKK_MP_SCREEN));
+    connect(findChild<QPushButton *>("apply_pressure_changes"),
+            &QPushButton::clicked,
+            std::bind(&MainWindow::exportConfig, this, VEIKK_MP_PRESSURE_MAP));
 }
 
 MainWindow::~MainWindow() {
@@ -132,7 +138,7 @@ QString MainWindow::getExportFormat(ModparmType type) {
                              | (quint64(quint16(pressureCoefs[2]))<<32)
                              | (quint64(quint16(pressureCoefs[1]))<<16)
                              | quint16(pressureCoefs[0]));
-    case VEIKK_MP_ALL:
+    default:
         return "";
     }
 }
@@ -219,16 +225,16 @@ void MainWindow::setDefaultScreenMap(int checkState) {
 void MainWindow::exportConfig(ModparmType type) {
     qint32 ret=0;
     QLabel *errLabel;
-    if(type==VEIKK_MP_ORIENTATION || type==VEIKK_MP_ALL)
+    if(type&VEIKK_MP_ORIENTATION)
         ret = setSysfsModparm("orientation",
                               getExportFormat(VEIKK_MP_ORIENTATION));
-    if(!ret && (type==VEIKK_MP_SCREEN_SIZE || type==VEIKK_MP_ALL))
+    if(!ret && type&VEIKK_MP_SCREEN_SIZE)
         ret = setSysfsModparm("screen_size",
                               getExportFormat(VEIKK_MP_SCREEN_SIZE));
-    if(!ret && (type==VEIKK_MP_SCREEN_MAP || type==VEIKK_MP_ALL))
+    if(!ret && type&VEIKK_MP_SCREEN_MAP)
         ret = setSysfsModparm("screen_map",
                               getExportFormat(VEIKK_MP_SCREEN_MAP));
-    if(!ret && (type==VEIKK_MP_PRESSURE_MAP || type==VEIKK_MP_ALL))
+    if(!ret && type&VEIKK_MP_PRESSURE_MAP)
         ret = setSysfsModparm("pressure_map",
                               getExportFormat(VEIKK_MP_PRESSURE_MAP));
 

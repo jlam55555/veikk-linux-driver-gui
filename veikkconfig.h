@@ -13,13 +13,15 @@
 #include <QCheckBox>
 #include <QComboBox>
 
-// supported modparm types
+// supported modparm types -- may not line up with
+// enum veikk_modparms from the driver
 typedef enum {
-    VEIKK_MP_SCREEN_MAP,
-    VEIKK_MP_SCREEN_SIZE,
-    VEIKK_MP_PRESSURE_MAP,
-    VEIKK_MP_ORIENTATION,
-    VEIKK_MP_ALL
+    VEIKK_MP_SCREEN_MAP		= 0x1,
+    VEIKK_MP_SCREEN_SIZE 	= 0x2,
+    VEIKK_MP_ORIENTATION 	= 0x4,
+    VEIKK_MP_PRESSURE_MAP 	= 0x8,
+    VEIKK_MP_SCREEN			= 0x7,
+    VEIKK_MP_ALL			= 0xf
 } ModparmType;
 
 QT_BEGIN_NAMESPACE
