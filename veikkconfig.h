@@ -37,9 +37,10 @@ public:
 
     void restoreConfig(VeikkParms &vp);
 
-    void setPressureMap(qint16 *newCoefs);
-    void setScreenMap(QRect newScreenMap);
     void setScreenSize(QRect newScreenSize);
+    void setScreenMap(QRect newScreenMap);
+    void setOrientation(quint32 newOrientation);
+    void setPressureMap(qint16 *newCoefs);
 
     int applyConfig(ModparmType type);
     int exportConfig(QString dest);

@@ -13,20 +13,22 @@ void VeikkParms::restoreConfig(VeikkParms &vp) {
     memcpy(pressureMap, vp.pressureMap, sizeof pressureMap);
 }
 
-void VeikkParms::setPressureMap(qint16 *newCoefs) {
-    memcpy(pressureMap, newCoefs, sizeof pressureMap);
+// data setters
+void VeikkParms::setScreenSize(QRect newScreenSize) {
+    screenSize[0] = quint16(newScreenSize.width());
+    screenSize[1] = quint16(newScreenSize.height());
 }
-
 void VeikkParms::setScreenMap(QRect newScreenMap) {
     screenMap[0] = quint16(newScreenMap.x());
     screenMap[1] = quint16(newScreenMap.y());
     screenMap[2] = quint16(newScreenMap.width());
     screenMap[3] = quint16(newScreenMap.height());
 }
-
-void VeikkParms::setScreenSize(QRect newScreenSize) {
-    screenSize[0] = quint16(newScreenSize.width());
-    screenSize[1] = quint16(newScreenSize.height());
+void VeikkParms::setOrientation(quint32 newOrientation) {
+    orientation = newOrientation;
+}
+void VeikkParms::setPressureMap(qint16 *newCoefs) {
+    memcpy(pressureMap, newCoefs, sizeof pressureMap);
 }
 
 // applies config to sysfs
@@ -47,8 +49,10 @@ int VeikkParms::applyConfig(ModparmType type) {
     return 0;
 }
 
+// exports config to conf file
 int VeikkParms::exportConfig(QString dest) {
-    // TODO
+    // TODO: implement this
+    return -1;
 }
 
 // TODO: error checking

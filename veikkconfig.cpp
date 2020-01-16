@@ -73,6 +73,9 @@ MainWindow::MainWindow(QWidget *parent)
     screenOrientation->addItem("90deg CCW");
     screenOrientation->addItem("Flipped");
     screenOrientation->addItem("90deg CW");
+    connect(screenOrientation,
+            QOverload<int>::of(&QComboBox::currentIndexChanged),
+            std::bind(&VeikkParms::setOrientation, &currentParms, std::placeholders::_1));
 
     connect(findChild<QAction *>("action_apply_all"), &QAction::triggered,
             std::bind(&VeikkParms::applyConfig, &currentParms, VEIKK_MP_ALL));
