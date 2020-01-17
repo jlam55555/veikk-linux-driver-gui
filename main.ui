@@ -328,6 +328,22 @@
           </property>
           <layout class="QVBoxLayout" name="verticalLayout_6">
            <item>
+            <widget class="QWidget" name="formWidget" native="true">
+             <layout class="QFormLayout" name="formLayout_4">
+              <item row="0" column="0">
+               <widget class="QLabel" name="label_17">
+                <property name="text">
+                 <string>Use preset</string>
+                </property>
+               </widget>
+              </item>
+              <item row="0" column="1">
+               <widget class="QComboBox" name="pressure_map_defaults"/>
+              </item>
+             </layout>
+            </widget>
+           </item>
+           <item>
             <widget class="QFrame" name="frame_2">
              <property name="frameShape">
               <enum>QFrame::StyledPanel</enum>
@@ -431,16 +447,6 @@
                     <double>0.000000000000000</double>
                    </property>
                   </widget>
-                 </item>
-                 <item row="4" column="0">
-                  <widget class="QLabel" name="label_17">
-                   <property name="text">
-                    <string>Preset</string>
-                   </property>
-                  </widget>
-                 </item>
-                 <item row="4" column="1">
-                  <widget class="QComboBox" name="comboBox_2"/>
                  </item>
                 </layout>
                </widget>

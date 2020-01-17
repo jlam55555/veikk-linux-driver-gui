@@ -63,7 +63,8 @@ MainWindow::MainWindow(QWidget *parent)
     connect(screenDefaultMap, &QCheckBox::stateChanged,
             this, &MainWindow::setDefaultScreenMap);
     for(i=0; i<4; i++)
-        connect(screenMapSpinboxes[i], &QSpinBox::editingFinished,
+        connect(screenMapSpinboxes[i],
+                QOverload<int>::of(&QSpinBox::valueChanged),
                 this, &MainWindow::updateScreenMapParms);
     screenSizeChanged(screen->geometry());
     updateScreenMapForm(screen->geometry());
@@ -75,17 +76,43 @@ MainWindow::MainWindow(QWidget *parent)
     screenOrientation->addItem("90deg CW");
     connect(screenOrientation,
             QOverload<int>::of(&QComboBox::currentIndexChanged),
-            std::bind(&VeikkParms::setOrientation, &currentParms, std::placeholders::_1));
+            std::bind(&VeikkParms::setOrientation, &currentParms,
+                      std::placeholders::_1));
 
     connect(findChild<QAction *>("action_apply_all"), &QAction::triggered,
-            std::bind(&VeikkParms::applyConfig, &currentParms, VEIKK_MP_ALL));
+            std::bind(&VeikkParms::applyConfig, &currentParms,
+                      &restoreParms, VEIKK_MP_ALL));
     connect(findChild<QPushButton *>("apply_screen_changes"),
             &QPushButton::clicked,
-            std::bind(&VeikkParms::applyConfig, &currentParms, VEIKK_MP_SCREEN));
+            std::bind(&VeikkParms::applyConfig, &currentParms,
+                      &restoreParms, VEIKK_MP_SCREEN));
     connect(findChild<QPushButton *>("apply_pressure_changes"),
             &QPushButton::clicked,
             std::bind(&VeikkParms::applyConfig, &currentParms,
-                      VEIKK_MP_PRESSURE_MAP));
+                      &restoreParms, VEIKK_MP_PRESSURE_MAP));
+
+    connect(findChild<QPushButton *>("reset_screen_changes"),
+            &QPushButton::clicked, this, &MainWindow::resetScreenChanges);
+    connect(findChild<QPushButton *>("reset_pressure_changes"),
+            &QPushButton::clicked, this, &MainWindow::resetPressureChanges);
+
+    pressureMapDefaults = findChild<QComboBox *>("pressure_map_defaults");
+    pressureMapDefaults->addItem("Linear (default)",
+                         VeikkParms::serializePressureMap(0, 100, 0, 0));
+    pressureMapDefaults->addItem("Quadratic 1",
+                         VeikkParms::serializePressureMap(0, 0, 100, 0));
+    pressureMapDefaults->addItem("Quadratic 2",
+                         VeikkParms::serializePressureMap(0, 200, -100, 0));
+    pressureMapDefaults->addItem("Cubic 1",
+                         VeikkParms::serializePressureMap(0, 0, 0, 100));
+    pressureMapDefaults->addItem("Cubic 2",
+                         VeikkParms::serializePressureMap(0, 100, 100, -100));
+    pressureMapDefaults->addItem("Linear soft touch",
+                         VeikkParms::serializePressureMap(0, 133, 0, 0));
+    pressureMapDefaults->addItem("Constant full pressure",
+                         VeikkParms::serializePressureMap(100, 0, 0, 0));
+    connect(pressureMapDefaults, QOverload<int>::of(&QComboBox::currentIndexChanged),
+            this, &MainWindow::setComboBoxDefaultPressure);
 }
 
 MainWindow::~MainWindow() {
@@ -205,4 +232,46 @@ void MainWindow::setDefaultScreenMap(int checkState) {
         return;
     updateScreenMapForm(screen->geometry());
     emit updateScreenMapRect(screen->geometry());
+}
+
+// callback for selecting a new pressure mapping default from the combobox
+void MainWindow::setComboBoxDefaultPressure() {
+    qint16 pressureCoefs[4];
+    currentParms.setPressureMap(pressureMapDefaults->currentData()
+                                    .toULongLong());
+    currentParms.getPressureMap(pressureCoefs);
+    updatePressureForm(pressureCoefs);
+    emit updatePressureCurve(pressureCoefs);
+}
+
+// callback to reset screen changes; doesn't make sense to "restore
+// screen size" (screen size is fixed at current geometry), so that isn't
+// ever changed
+void MainWindow::resetScreenChanges() {
+    QRect screenMap;
+    quint32 orientation;
+
+    currentParms.restoreConfig(&restoreParms,
+                               VEIKK_MP_SCREEN_MAP|VEIKK_MP_ORIENTATION);
+    screenMap = currentParms.getScreenMap();
+    orientation = currentParms.getOrientation();
+
+    screenOrientation->setCurrentIndex(qint32(orientation));
+
+    // if invalid screen map (e.g., default has value of 0)
+    if(currentParms.isInvalidScreenMap()) {
+        setDefaultScreenMap(Qt::Checked);
+    } else {
+        updateScreenMapForm(screenMap);
+        emit updateScreenMapRect(screenMap);
+    }
+}
+
+// callback to reset pressure changes
+void MainWindow::resetPressureChanges() {
+    qint16 pressureCoefs[4];
+    currentParms.restoreConfig(&restoreParms, VEIKK_MP_PRESSURE_MAP);
+    currentParms.getPressureMap(pressureCoefs);
+    updatePressureForm(pressureCoefs);
+    emit updatePressureCurve(pressureCoefs);
 }

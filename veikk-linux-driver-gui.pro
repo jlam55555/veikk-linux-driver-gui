@@ -27,7 +27,8 @@ HEADERS += \
     qpressurecurvepoint.h \
     qpressurecurvescene.h \
     qscreenmapscene.h \
-    veikkconfig.h
+    veikkconfig.h \
+    veikkparms.h
 
 FORMS += \
     main.ui

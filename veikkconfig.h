@@ -5,6 +5,7 @@
 #ifndef MAINWINDOW_H
 #define MAINWINDOW_H
 
+#include "veikkparms.h"
 #include <QMainWindow>
 #include <QGraphicsView>
 #include <QDoubleSpinBox>
@@ -15,48 +16,6 @@
 
 // TODO: remove
 #include <QDebug>
-
-// supported modparm types -- may not line up with
-// enum veikk_modparms from the driver
-typedef enum {
-    VEIKK_MP_SCREEN_MAP		= 0x1,
-    VEIKK_MP_SCREEN_SIZE 	= 0x2,
-    VEIKK_MP_ORIENTATION 	= 0x4,
-    VEIKK_MP_PRESSURE_MAP 	= 0x8,
-    VEIKK_MP_SCREEN			= 0x7,
-    VEIKK_MP_ALL			= 0xf
-} ModparmType;
-
-// used to store an entire configuration, in a format easily translatable
-// to/from Qt front-end and export/import config files; also used to save and
-// restore configurations
-class VeikkParms {
-public:
-    // default constructor sets defaults; defaults outlined in driver
-    VeikkParms();
-
-    void restoreConfig(VeikkParms &vp);
-
-    void setScreenSize(QRect newScreenSize);
-    void setScreenMap(QRect newScreenMap);
-    void setOrientation(quint32 newOrientation);
-    void setPressureMap(qint16 *newCoefs);
-
-    int applyConfig(ModparmType type);
-    int exportConfig(QString dest);
-
-private:
-    quint16 screenSize[2];
-    quint16 screenMap[4];
-    quint32 orientation;
-    qint16 pressureMap[4];
-
-    int setSysfsModparm(QString parmName, QString value);
-    quint32 screenSizeExport();
-    quint64 screenMapExport();
-    quint32 orientationExport();
-    quint64 pressureMapExport();
-};
 
 QT_BEGIN_NAMESPACE
 namespace Ui { class MainWindow; }
@@ -87,7 +46,7 @@ private:
              *screenMapSpinboxes[4];
     QLineEdit *screenWidthLineEdit, *screenHeightLineEdit;
     QCheckBox *screenDefaultMap;
-    QComboBox *screenOrientation;
+    QComboBox *screenOrientation, *pressureMapDefaults;
 
     // handlers
     void showEvent(QShowEvent *evt) override;
@@ -105,6 +64,9 @@ public slots:
     void updateScreenMapForm(QRect newScreenMap);
     void updateScreenMapParms();
     void setDefaultScreenMap(int checkState);
+    void setComboBoxDefaultPressure();
+    void resetScreenChanges();
+    void resetPressureChanges();
 
 signals:
     void updatePressureCurve(qint16 *newCoefs);
