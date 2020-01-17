@@ -58,7 +58,8 @@ private:
         quint16 width, height;
     } screenSize;
     struct serializableScreenMap {
-        quint16 x, y, width, height;
+        qint16 x, y;
+        quint16 width, height;
     } screenMap;
     quint32 orientation;
     struct serializablePressureMap {

@@ -23,8 +23,8 @@ void VeikkParms::setScreenSize(QRect newScreenSize) {
     screenSize.height = quint16(newScreenSize.height());
 }
 void VeikkParms::setScreenMap(QRect newScreenMap) {
-    screenMap.x = quint16(newScreenMap.x());
-    screenMap.y = quint16(newScreenMap.y());
+    screenMap.x = qint16(newScreenMap.x());
+    screenMap.y = qint16(newScreenMap.y());
     screenMap.width = quint16(newScreenMap.width());
     screenMap.height = quint16(newScreenMap.height());
 }
