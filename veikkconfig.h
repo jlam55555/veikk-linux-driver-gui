@@ -67,6 +67,8 @@ public slots:
     void setComboBoxDefaultPressure();
     void resetScreenChanges();
     void resetPressureChanges();
+    void loadParmsFromSysconfig();
+    void updateUiFromParms();
 
 signals:
     void updatePressureCurve(qint16 *newCoefs);

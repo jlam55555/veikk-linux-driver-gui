@@ -25,6 +25,9 @@ public:
 
     void restoreConfig(VeikkParms *restoreParms, int parms);
 
+    int loadFromSysfs();
+    int loadFromFile(QString &pathToConf);
+
     // setters and getters: these translate to/from internal types to more
     // easily-usable-in-UI Q-types
     void setScreenSize(QRect newScreenSize);
@@ -67,10 +70,17 @@ private:
     } pressureMap;
 
     int setSysfsModparm(QString parmName, QString value);
+    QString getSysfsModparm(QString parmName);
+
     quint32 serializeScreenSize();
     quint64 serializeScreenMap();
     quint32 serializeOrientation();
     quint64 serializePressureMap();
+
+    void deserializeAndSetScreenSize(quint32 newScreenSize);
+    void deserializeAndSetScreenMap(quint64 newScreenMap);
+    void deserializeAndSetOrientation(quint32 newOrientation);
+    void deserializeAndSetPressureMap(quint64 newPressureMap);
 };
 
 #endif // VEIKKPARMS_H

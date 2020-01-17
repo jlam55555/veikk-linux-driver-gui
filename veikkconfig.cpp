@@ -113,6 +113,9 @@ MainWindow::MainWindow(QWidget *parent)
                          VeikkParms::serializePressureMap(100, 0, 0, 0));
     connect(pressureMapDefaults, QOverload<int>::of(&QComboBox::currentIndexChanged),
             this, &MainWindow::setComboBoxDefaultPressure);
+
+    // load and apply configs from sysfs
+    loadParmsFromSysconfig();
 }
 
 MainWindow::~MainWindow() {
@@ -272,6 +275,29 @@ void MainWindow::resetPressureChanges() {
     qint16 pressureCoefs[4];
     currentParms.restoreConfig(&restoreParms, VEIKK_MP_PRESSURE_MAP);
     currentParms.getPressureMap(pressureCoefs);
+    updatePressureForm(pressureCoefs);
+    emit updatePressureCurve(pressureCoefs);
+}
+
+// get parms from sysconfig and sync all ui elements
+void MainWindow::loadParmsFromSysconfig() {
+    currentParms.loadFromSysfs();
+    updateUiFromParms();
+}
+
+// update all UI elements from currentParms
+void MainWindow::updateUiFromParms() {
+    QRect screenMap;
+    quint32 orientation;
+    qint16 pressureCoefs[4];
+
+    screenMap = currentParms.getScreenMap();
+    orientation = currentParms.getOrientation();
+    currentParms.getPressureMap(pressureCoefs);
+
+    updateScreenMapForm(screenMap);
+    emit updateScreenMapRect(screenMap);
+    screenOrientation->setCurrentIndex(qint32(orientation));
     updatePressureForm(pressureCoefs);
     emit updatePressureCurve(pressureCoefs);
 }
