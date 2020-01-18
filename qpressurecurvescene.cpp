@@ -40,7 +40,7 @@ qreal QPressureCurveScene::curveFn(qreal x) {
 // called by form on update with newCoefs, called by moving points with nullptr
 void QPressureCurveScene::updatePressureCurve(qint16 *newCoefs) {
     qreal x, y, granularity=0.02;
-    QPainterPath path;
+    QPainterPath path{};
 
     if(newCoefs == nullptr)
         findCoefs();
@@ -49,7 +49,6 @@ void QPressureCurveScene::updatePressureCurve(qint16 *newCoefs) {
         repositionControlPoints();
     }
 
-    path.clear();
     for(x=0; x<1; x+=granularity) {
         y = curveFn(x);
         y = y>1?1:y<0?0:y;
