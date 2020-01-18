@@ -32,7 +32,8 @@ private:
     Ui::MainWindow *ui;
     QScreen *screen;
 
-    // configuration data
+    // configuration data; current is synced with UI, restoreParms is the last
+    // saved configuration
     VeikkParms currentParms{}, restoreParms{};
 
     // relevant elements

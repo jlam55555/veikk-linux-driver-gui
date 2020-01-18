@@ -85,6 +85,8 @@ int VeikkParms::applyConfig(VeikkParms *restoreParms, int parms) {
                         QString::number(serializePressureMap()));
     // save to restoreParms
     restoreParms->restoreConfig(this, parms);
+    // apply restoreParms to modprobe.d
+    restoreParms->applyModprobed();
     return 0;
 }
 
@@ -95,6 +97,7 @@ int VeikkParms::exportConfig(QString dest) {
 }
 
 // TODO: error checking
+// TODO: update write to stream format
 // note: this will fail if not root
 int VeikkParms::setSysfsModparm(QString parmName, QString value) {
     const QString baseUrl = "/sys/module/veikk/parameters/";
@@ -115,6 +118,22 @@ QString VeikkParms::getSysfsModparm(QString parmName) {
     return QString{parmFile.readAll()};
 }
 
+// TODO: error checking
+// for use by applyConfig on restoreParms to save changes in /etc/modprobe.d
+void VeikkParms::applyModprobed() {
+    QFile modprobeConfFile{"/etc/modprobe.d/veikk.conf"};
+    QTextStream format{&modprobeConfFile};
+
+    if(!modprobeConfFile.open(QIODevice::WriteOnly|QIODevice::Text))
+        return;
+
+    format << "options veikk"
+           << " screen_size=" << serializeScreenSize()
+           << " screen_map=" << serializeScreenMap()
+           << " orientation=" << serializeOrientation()
+           << " pressure_map=" << serializePressureMap();
+}
+
 // static function for storing default pressure maps in qcombobox; equivalent
 // conversion as in serializePressureMap() (non-static version)
 quint64 VeikkParms::serializePressureMap(qint16 a0, qint16 a1, qint16 a2,
@@ -122,7 +141,8 @@ quint64 VeikkParms::serializePressureMap(qint16 a0, qint16 a1, qint16 a2,
     struct serializablePressureMap pressureMap { a0, a1, a2, a3 };
     return *reinterpret_cast<quint64 *>(&pressureMap);
 }
-//
+// static function for deserializing one of the default pressure maps stored in
+// the qcombobox -- see above
 void VeikkParms::setPressureMap(quint64 newPressureMap) {
     pressureMap = *reinterpret_cast<struct serializablePressureMap *>
                         (&newPressureMap);

@@ -72,6 +72,10 @@ private:
     int setSysfsModparm(QString parmName, QString value);
     QString getSysfsModparm(QString parmName);
 
+    // for use by applyConfig on restoreParms after applying to make changes
+    // persist after boot, using /etc/modprobe.d
+    void applyModprobed();
+
     quint32 serializeScreenSize();
     quint64 serializeScreenMap();
     quint32 serializeOrientation();
