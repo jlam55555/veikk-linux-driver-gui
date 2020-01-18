@@ -310,8 +310,13 @@ void MainWindow::updateUiFromParms() {
     orientation = currentParms.getOrientation();
     currentParms.getPressureMap(pressureCoefs);
 
-    updateScreenMapForm(screenMap);
-    emit updateScreenMapRect(screenMap);
+    // if invalid screen map (e.g., default has value of 0)
+    if(currentParms.isInvalidScreenMap()) {
+        setDefaultScreenMap(Qt::Checked);
+    } else {
+        updateScreenMapForm(screenMap);
+        emit updateScreenMapRect(screenMap);
+    }
     screenOrientation->setCurrentIndex(qint32(orientation));
     updatePressureForm(pressureCoefs);
     emit updatePressureCurve(pressureCoefs);
