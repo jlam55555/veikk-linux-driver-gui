@@ -293,10 +293,12 @@ void MainWindow::resetPressureChanges() {
 }
 
 // get parms from sysconfig (i.e., "effective config") and sync all ui
-// elements
+// elements (like in other sections, don't set screen size in current
+// parms -- let that stay the current screen size)
 void MainWindow::loadParmsFromSysconfig() {
     restoreParms.loadFromSysfs();
-    currentParms.restoreConfig(&restoreParms, VEIKK_MP_ALL);
+    currentParms.restoreConfig(&restoreParms,
+                               VEIKK_MP_ALL^VEIKK_MP_SCREEN_SIZE);
     updateUiFromParms();
 }
 
