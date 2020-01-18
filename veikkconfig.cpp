@@ -124,6 +124,8 @@ MainWindow::MainWindow(QWidget *parent)
                       "Author:\tJonathan Lam <jlam55555@gmail.com>\n"
                       "URL:\thttps://github.com/jlam55555/veikk-linux-driver\n"
                       "License:\tGPL", false));
+    connect(findChild<QAction *>("action_load_config_sysfs"),
+            &QAction::triggered, this, &MainWindow::loadParmsFromSysconfig);
 
     // load and apply configs from sysfs
     loadParmsFromSysconfig();
@@ -290,9 +292,11 @@ void MainWindow::resetPressureChanges() {
     emit updatePressureCurve(pressureCoefs);
 }
 
-// get parms from sysconfig and sync all ui elements
+// get parms from sysconfig (i.e., "effective config") and sync all ui
+// elements
 void MainWindow::loadParmsFromSysconfig() {
-    currentParms.loadFromSysfs();
+    restoreParms.loadFromSysfs();
+    currentParms.restoreConfig(&restoreParms, VEIKK_MP_ALL);
     updateUiFromParms();
 }
 

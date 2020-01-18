@@ -655,10 +655,10 @@
      <string>&amp;Config</string>
     </property>
     <addaction name="action_apply_all"/>
+    <addaction name="action_load_config_sysfs"/>
     <addaction name="action_load_config_file"/>
     <addaction name="action_save_config"/>
     <addaction name="action_save_config_as"/>
-    <addaction name="action_load_config_sysfs"/>
    </widget>
    <widget class="QMenu" name="menuHelp">
     <property name="title">
@@ -697,7 +697,7 @@
   </action>
   <action name="action_load_config_sysfs">
    <property name="text">
-    <string>Restore current settings</string>
+    <string>Load &amp;effective config</string>
    </property>
   </action>
  </widget>
