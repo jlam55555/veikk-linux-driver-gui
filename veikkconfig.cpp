@@ -5,6 +5,7 @@
 #include <QScreen>
 #include <QGuiApplication>
 #include <QFile>
+#include <QMessageBox>
 
 // set up widgets, hook up handlers
 MainWindow::MainWindow(QWidget *parent)
@@ -79,9 +80,6 @@ MainWindow::MainWindow(QWidget *parent)
             std::bind(&VeikkParms::setOrientation, &currentParms,
                       std::placeholders::_1));
 
-    connect(findChild<QAction *>("action_apply_all"), &QAction::triggered,
-            std::bind(&VeikkParms::applyConfig, &currentParms,
-                      &restoreParms, VEIKK_MP_ALL));
     connect(findChild<QPushButton *>("apply_screen_changes"),
             &QPushButton::clicked,
             std::bind(&VeikkParms::applyConfig, &currentParms,
@@ -90,7 +88,6 @@ MainWindow::MainWindow(QWidget *parent)
             &QPushButton::clicked,
             std::bind(&VeikkParms::applyConfig, &currentParms,
                       &restoreParms, VEIKK_MP_PRESSURE_MAP));
-
     connect(findChild<QPushButton *>("reset_screen_changes"),
             &QPushButton::clicked, this, &MainWindow::resetScreenChanges);
     connect(findChild<QPushButton *>("reset_pressure_changes"),
@@ -113,6 +110,20 @@ MainWindow::MainWindow(QWidget *parent)
                          VeikkParms::serializePressureMap(100, 0, 0, 0));
     connect(pressureMapDefaults, QOverload<int>::of(&QComboBox::currentIndexChanged),
             this, &MainWindow::setComboBoxDefaultPressure);
+
+    // connect menu actions
+    connect(findChild<QAction *>("action_apply_all"), &QAction::triggered,
+            std::bind(&VeikkParms::applyConfig, &currentParms,
+                      &restoreParms, VEIKK_MP_ALL));
+    connect(findChild<QAction *>("action_about"), &QAction::triggered,
+            std::bind(&MainWindow::launchDialog, this,
+                      "Configuration Tool for the VEIKK Linux Driver\n\n"
+                      "Driver details:\n"
+                      "Desc:\tUSB VEIKK drawing tablet driver\n"
+                      "Version:\tv2.0\n"
+                      "Author:\tJonathan Lam <jlam55555@gmail.com>\n"
+                      "URL:\thttps://github.com/jlam55555/veikk-linux-driver\n"
+                      "License:\tGPL", false));
 
     // load and apply configs from sysfs
     loadParmsFromSysconfig();
@@ -300,4 +311,16 @@ void MainWindow::updateUiFromParms() {
     screenOrientation->setCurrentIndex(qint32(orientation));
     updatePressureForm(pressureCoefs);
     emit updatePressureCurve(pressureCoefs);
+}
+
+// launch dialog box with arbitrary text
+void MainWindow::launchDialog(QString text, bool isModal) {
+    QMessageBox *dialog = new QMessageBox{};
+    dialog->setAttribute(Qt::WA_DeleteOnClose);
+    dialog->setText(text);
+    dialog->setModal(isModal);
+    if(isModal)
+        dialog->exec();
+    else
+        dialog->show();
 }

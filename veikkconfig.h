@@ -69,6 +69,7 @@ public slots:
     void resetPressureChanges();
     void loadParmsFromSysconfig();
     void updateUiFromParms();
+    void launchDialog(QString text, bool isModal);
 
 signals:
     void updatePressureCurve(qint16 *newCoefs);
