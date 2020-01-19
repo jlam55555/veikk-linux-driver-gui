@@ -59,6 +59,7 @@ private:
     void getPressureCoefs(qint16 *coefs);
     QRect getScreenMapParms();
 
+    // update statusbar
     void updateStatus();
 
 public slots:
@@ -77,6 +78,7 @@ public slots:
     void launchDialog(QString text, bool isModal);
     void loadParmsFromConfigFile();
     void saveConfigToFile(bool saveAs);
+    void applyConfig(int parms);
 
 signals:
     void updatePressureCurve(qint16 *newCoefs);

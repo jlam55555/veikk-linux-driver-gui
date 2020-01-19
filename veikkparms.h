@@ -23,17 +23,25 @@ public:
     // default constructor sets defaults; defaults outlined in driver
     VeikkParms();
 
+    // use these to warn about errors; VP_STATUS_ERRNO is for arbitrary errors
+    // that should be set in errno (e.g., from open/write calls)
+    typedef enum {
+        VP_STATUS_NORMAL, VP_STATUS_ACCES, VP_STATUS_FORMAT, VP_STATUS_MISSING,
+        VP_STATUS_INVAL, VP_STATUS_OVRFLW, VP_STATUS_ERRNO
+    } VPStatus;
+    static QString strerror(VPStatus err);
+
     void restoreConfig(VeikkParms *restoreParms, int parms);
 
-    int loadFromSysfs();
-    int loadFromFile(QString src);
+    VPStatus loadFromSysfs();
+    VPStatus loadFromFile(QString src);
 
     // setters and getters: these translate to/from internal types to more
     // easily-usable-in-UI Q-types
-    void setScreenSize(QRect newScreenSize);
-    void setScreenMap(QRect newScreenMap);
-    void setOrientation(quint32 newOrientation);
-    void setPressureMap(qint16 *newCoefs);
+    VPStatus setScreenSize(QRect newScreenSize);
+    VPStatus setScreenMap(QRect newScreenMap);
+    VPStatus setOrientation(quint32 newOrientation);
+    VPStatus setPressureMap(qint16 *newCoefs);
 
     QSize getScreenSize();
     QRect getScreenMap();
@@ -41,8 +49,8 @@ public:
     void getPressureMap(qint16 *coefs);
     bool isInvalidScreenMap();
 
-    int applyConfig(VeikkParms *restoreParms, int parms);
-    int exportConfig(QString dest);
+    VPStatus applyConfig(VeikkParms &restoreParms, int parms);
+    VPStatus exportConfig(QString dest);
 
     // for use with combobox, which has to store data in compressed form
     static quint64 serializePressureMap(qint16 a0, qint16 a1, qint16 a2,
@@ -69,12 +77,12 @@ private:
         qint16 a0, a1, a2, a3;
     } pressureMap;
 
-    int setSysfsModparm(QString parmName, QString value);
-    QString getSysfsModparm(QString parmName);
+    VPStatus setSysfsModparm(QString parmName, QString value);
+    VPStatus getSysfsModparm(QString parmName, QString &value);
 
     // for use by applyConfig on restoreParms after applying to make changes
     // persist after boot, using /etc/modprobe.d
-    void applyModprobed();
+    VPStatus applyModprobed();
 
     quint32 serializeScreenSize();
     quint64 serializeScreenMap();

@@ -84,12 +84,10 @@ MainWindow::MainWindow(QWidget *parent)
 
     connect(findChild<QPushButton *>("apply_screen_changes"),
             &QPushButton::clicked,
-            std::bind(&VeikkParms::applyConfig, &currentParms,
-                      &restoreParms, VEIKK_MP_SCREEN));
+            std::bind(&MainWindow::applyConfig, this, VEIKK_MP_SCREEN));
     connect(findChild<QPushButton *>("apply_pressure_changes"),
             &QPushButton::clicked,
-            std::bind(&VeikkParms::applyConfig, &currentParms,
-                      &restoreParms, VEIKK_MP_PRESSURE_MAP));
+            std::bind(&MainWindow::applyConfig, this, VEIKK_MP_PRESSURE_MAP));
     connect(findChild<QPushButton *>("reset_screen_changes"),
             &QPushButton::clicked, this, &MainWindow::resetScreenChanges);
     connect(findChild<QPushButton *>("reset_pressure_changes"),
@@ -117,11 +115,11 @@ MainWindow::MainWindow(QWidget *parent)
 
     // connect menu actions
     connect(findChild<QAction *>("action_apply_all"), &QAction::triggered,
-            std::bind(&VeikkParms::applyConfig, &currentParms,
-                      &restoreParms, VEIKK_MP_ALL));
+            std::bind(&MainWindow::applyConfig, this, VEIKK_MP_ALL));
     connect(findChild<QAction *>("action_about"), &QAction::triggered,
             std::bind(&MainWindow::launchDialog, this,
-                      "Configuration Tool for the VEIKK Linux Driver\n\n"
+                      "Configuration Tool for the VEIKK Linux Driver\n"
+                      "https://github.com/jlam55555/veikk-linux-driver-gui\n\n"
                       "Driver details:\n"
                       "Desc:\tUSB VEIKK drawing tablet driver\n"
                       "Version:\tv2.0\n"
@@ -177,10 +175,9 @@ QRect MainWindow::getScreenMapParms() {
     };
 }
 
+// TODO: implement this
 // update statusbar -- happens any time an update or save/apply happens
-void MainWindow::updateStatus() {
-    //if(currentParms == )
-}
+void MainWindow::updateStatus() { }
 
 // on screen size changed; update screen size form, sync with currentParms,
 // adjust view matrix
@@ -313,7 +310,10 @@ void MainWindow::resetPressureChanges() {
 // elements (like in other sections, don't set screen size in current
 // parms -- let that stay the current screen size)
 void MainWindow::loadParmsFromSysconfig() {
-    restoreParms.loadFromSysfs();
+    VeikkParms::VPStatus err;
+    if((err=restoreParms.loadFromSysfs()))
+        return launchDialog("Loading default parms: "+VeikkParms::strerror(err),
+                            true);
     currentParms.restoreConfig(&restoreParms,
                                VEIKK_MP_ALL^VEIKK_MP_SCREEN_SIZE);
     updateUiFromParms();
@@ -354,16 +354,19 @@ void MainWindow::launchDialog(QString text, bool isModal) {
 }
 
 // get parms from a config file
-// TODO: do error checking
 void MainWindow::loadParmsFromConfigFile() {
+    VeikkParms::VPStatus err;
     QString src = QFileDialog::getOpenFileName(this,
         "Open VEIKK conf file", QDir::homePath(),
         "VEIKK config files (*.conf)");
 
+    // exit if no file selected
     if(src == QString{})
         return;
 
-    restoreParms.loadFromFile(src);
+    if((err=restoreParms.loadFromFile(src)))
+        return launchDialog("Opening config file "+src+": "+
+                            VeikkParms::strerror(err), true);
     currentParms.restoreConfig(&restoreParms,
                                VEIKK_MP_ALL^VEIKK_MP_SCREEN_SIZE);
     curParmPath = src;
@@ -372,12 +375,27 @@ void MainWindow::loadParmsFromConfigFile() {
 
 // save config to file
 void MainWindow::saveConfigToFile(bool saveAs) {
+    VeikkParms::VPStatus err;
     if(saveAs || curParmPath == "")
         curParmPath = QFileDialog::getSaveFileName(this,
             "Save VEIKK conf file", QDir::homePath(),
             "VEIKK config files (*.conf)");
 
+    // exit if no file selected
+    if(curParmPath == "")
+        return;
+
     // export, save to restoreParms
-    currentParms.exportConfig(curParmPath);
+    if((err=currentParms.exportConfig(curParmPath)))
+        return launchDialog("Saving config to file "+curParmPath+": "+
+                            VeikkParms::strerror(err), true);
     restoreParms.restoreConfig(&currentParms, VEIKK_MP_ALL);
+}
+
+// wrapper for applying config parms
+void MainWindow::applyConfig(int parms) {
+    VeikkParms::VPStatus err;
+    if((err=currentParms.applyConfig(restoreParms, parms)))
+        launchDialog("Applying current config: "+VeikkParms::strerror(err),
+                     true);
 }
