@@ -35,6 +35,7 @@ private:
     // configuration data; current is synced with UI, restoreParms is the last
     // saved configuration
     VeikkParms currentParms{}, restoreParms{};
+    QString curParmPath;
 
     // relevant elements
     QTabWidget *tabWidget;
@@ -71,6 +72,8 @@ public slots:
     void loadParmsFromSysconfig();
     void updateUiFromParms();
     void launchDialog(QString text, bool isModal);
+    void loadParmsFromConfigFile();
+    void saveConfigToFile(bool saveAs);
 
 signals:
     void updatePressureCurve(qint16 *newCoefs);

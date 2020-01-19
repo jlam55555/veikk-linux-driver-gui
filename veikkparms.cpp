@@ -1,5 +1,7 @@
 #include "veikkconfig.h"
 #include <QFile>
+#include <QSettings>
+#include <climits>
 
 VeikkParms::VeikkParms()
     : screenSize{0, 0}, screenMap{0, 0, 0, 0},
@@ -29,25 +31,84 @@ int VeikkParms::loadFromSysfs() {
 
 // get values from a conf file
 // TODO: implement this
-int VeikkParms::loadFromFile(QString &pathToConf) {
+int VeikkParms::loadFromFile(QString src) {
+    QSettings settings{src, QSettings::Format::NativeFormat};
+    QRect ss, sm;
+    quint32 ori;
+    qint16 pm[4];
+    QString props[] = {"screen_size/width", "screen_size/height",
+                       "screen_map/x", "screen_map/y",
+                       "screen_map/width", "screen_map/height",
+                       "orientation/orientation",
+                       "pressure_map/a0", "pressure_map/a1",
+                       "pressure_map/a2", "pressure_map/a3"};
+
+    // check that all properties are there
+    for(QString prop: props)
+        if(!settings.contains(prop)) {
+            qInfo() << "Missing property:" << prop;
+            return -1;
+        }
+
+    // parse values; error checking will be done in setters
+    // TODO: make sure pm variables don't overflow, check sign of orientation
+    // 		 as these don't get checked in setters
+    ss = QRect{
+        0, 0,
+        settings.value("screen_size/width").toInt(),
+        settings.value("screen_size/height").toInt()
+    };
+    sm = QRect {
+        settings.value("screen_map/x").toInt(),
+        settings.value("screen_map/x").toInt(),
+        settings.value("screen_map/width").toInt(),
+        settings.value("screen_map/height").toInt()
+    };
+    ori = settings.value("orientation/orientation").toUInt();
+    pm[0] = quint16(settings.value("pressure_map/a0").toFloat()*100);
+    pm[1] = quint16(settings.value("pressure_map/a1").toFloat()*100);
+    pm[2] = quint16(settings.value("pressure_map/a2").toFloat()*100);
+    pm[3] = quint16(settings.value("pressure_map/a3").toFloat()*100);
+
+    // warn if any formatting errors
+//    qInfo() << settings.status();
+
+    setScreenSize(ss);
+    setScreenMap(sm);
+    setOrientation(ori);
+    setPressureMap(pm);
     return 0;
 }
 
 // data setters -- parse from Q-types
+// TODO: error checking and returning error values; these are often called
+// 		 with user-set values
 void VeikkParms::setScreenSize(QRect newScreenSize) {
+    if(newScreenSize.width()<=0 || newScreenSize.height()<=0)
+        return;
+    if(newScreenSize.width()>USHRT_MAX || newScreenSize.height()>USHRT_MAX)
+        return;
     screenSize.width = quint16(newScreenSize.width());
     screenSize.height = quint16(newScreenSize.height());
 }
 void VeikkParms::setScreenMap(QRect newScreenMap) {
+    if(newScreenMap.width()<=0 || newScreenMap.height()<=0)
+        return;
+    if(newScreenMap.x()<SHRT_MIN || newScreenMap.y()>SHRT_MAX ||
+       newScreenMap.width()>USHRT_MAX || newScreenMap.height()>USHRT_MAX)
+        return;
     screenMap.x = qint16(newScreenMap.x());
     screenMap.y = qint16(newScreenMap.y());
     screenMap.width = quint16(newScreenMap.width());
     screenMap.height = quint16(newScreenMap.height());
 }
 void VeikkParms::setOrientation(quint32 newOrientation) {
+    if(newOrientation>3)
+        return;
     orientation = newOrientation;
 }
 void VeikkParms::setPressureMap(qint16 *newCoefs) {
+    // no error checks
     pressureMap = *reinterpret_cast<struct serializablePressureMap *>(newCoefs);
 }
 
@@ -92,8 +153,30 @@ int VeikkParms::applyConfig(VeikkParms *restoreParms, int parms) {
 
 // exports config to conf file
 int VeikkParms::exportConfig(QString dest) {
-    // TODO: implement this
-    return -1;
+    QSettings settings{dest, QSettings::Format::NativeFormat};
+
+    settings.beginGroup("screen_size");
+    settings.setValue("width", screenSize.width);
+    settings.setValue("height", screenSize.height);
+    settings.endGroup();
+
+    settings.beginGroup("screen_map");
+    settings.setValue("x", screenMap.x);
+    settings.setValue("y", screenMap.y);
+    settings.setValue("width", screenMap.width);
+    settings.setValue("height", screenMap.height);
+    settings.endGroup();
+
+    settings.beginGroup("orientation");
+    settings.setValue("orientation", orientation);
+    settings.endGroup();
+
+    settings.beginGroup("pressure_map");
+    settings.setValue("a0", pressureMap.a0/100.0);
+    settings.setValue("a1", pressureMap.a1/100.0);
+    settings.setValue("a2", pressureMap.a2/100.0);
+    settings.setValue("a3", pressureMap.a3/100.0);
+    settings.endGroup();
 }
 
 // TODO: error checking
@@ -163,13 +246,14 @@ quint64 VeikkParms::serializePressureMap() {
 }
 
 // the following setters set the parms from serialized format
+// no need for error checking, these only come directly from sysfs
 void VeikkParms::deserializeAndSetScreenSize(quint32 newScreenSize) {
-    screenSize = *reinterpret_cast<struct serializableScreenSize *>
-                    (&newScreenSize);
+    screenSize =
+            *reinterpret_cast<struct serializableScreenSize *>(&newScreenSize);
 }
 void VeikkParms::deserializeAndSetScreenMap(quint64 newScreenMap) {
-    screenMap = *reinterpret_cast<struct serializableScreenMap *>
-                    (&newScreenMap);
+    screenMap =
+            *reinterpret_cast<struct serializableScreenMap *>(&newScreenMap);
 }
 void VeikkParms::deserializeAndSetOrientation(quint32 newOrientation) {
     orientation = newOrientation;

@@ -6,6 +6,7 @@
 #include <QGuiApplication>
 #include <QFile>
 #include <QMessageBox>
+#include <QFileDialog>
 
 // set up widgets, hook up handlers
 MainWindow::MainWindow(QWidget *parent)
@@ -126,6 +127,14 @@ MainWindow::MainWindow(QWidget *parent)
                       "License:\tGPL", false));
     connect(findChild<QAction *>("action_load_config_sysfs"),
             &QAction::triggered, this, &MainWindow::loadParmsFromSysconfig);
+    connect(findChild<QAction *>("action_load_config_file"),
+            &QAction::triggered, this, &MainWindow::loadParmsFromConfigFile);
+    connect(findChild<QAction *>("action_save_config"),
+            &QAction::triggered,
+            std::bind(&MainWindow::saveConfigToFile, this, false));
+    connect(findChild<QAction *>("action_save_config_as"),
+            &QAction::triggered,
+            std::bind(&MainWindow::saveConfigToFile, this, true));
 
     // load and apply configs from sysfs
     loadParmsFromSysconfig();
@@ -334,4 +343,33 @@ void MainWindow::launchDialog(QString text, bool isModal) {
         dialog->exec();
     else
         dialog->show();
+}
+
+// get parms from a config file
+// TODO: do error checking
+void MainWindow::loadParmsFromConfigFile() {
+    QString src = QFileDialog::getOpenFileName(this,
+        "Open VEIKK conf file", QDir::homePath(),
+        "VEIKK config files (*.conf)");
+
+    if(src == QString{})
+        return;
+
+    restoreParms.loadFromFile(src);
+    currentParms.restoreConfig(&restoreParms,
+                               VEIKK_MP_ALL^VEIKK_MP_SCREEN_SIZE);
+    curParmPath = src;
+    updateUiFromParms();
+}
+
+// save config to file
+void MainWindow::saveConfigToFile(bool saveAs) {
+    if(saveAs || curParmPath == "")
+        curParmPath = QFileDialog::getSaveFileName(this,
+            "Save VEIKK conf file", QDir::homePath(),
+            "VEIKK config files (*.conf)");
+
+    // export, save to restoreParms
+    currentParms.exportConfig(curParmPath);
+    restoreParms.restoreConfig(&currentParms, VEIKK_MP_ALL);
 }

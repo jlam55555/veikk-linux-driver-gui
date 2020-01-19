@@ -26,7 +26,7 @@ public:
     void restoreConfig(VeikkParms *restoreParms, int parms);
 
     int loadFromSysfs();
-    int loadFromFile(QString &pathToConf);
+    int loadFromFile(QString src);
 
     // setters and getters: these translate to/from internal types to more
     // easily-usable-in-UI Q-types
@@ -56,7 +56,7 @@ private:
     // are only meant for internal use to be easier to deal with serialization /
     // deserialization; convert to/from Q-types when interfacing with this class
     // from the UI (i.e., screenSize/Map->QRect, orientation->qint32,
-    // pressureMap->qint16[4])
+    // pressureMap->qint16[4]); choice to use structs is completely arbitrary
     struct serializableScreenSize {
         quint16 width, height;
     } screenSize;
