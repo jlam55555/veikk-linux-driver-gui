@@ -7,6 +7,7 @@
 #include <QFile>
 #include <QMessageBox>
 #include <QFileDialog>
+#include <QStatusBar>
 
 // set up widgets, hook up handlers
 MainWindow::MainWindow(QWidget *parent)
@@ -112,6 +113,8 @@ MainWindow::MainWindow(QWidget *parent)
     connect(pressureMapDefaults, QOverload<int>::of(&QComboBox::currentIndexChanged),
             this, &MainWindow::setComboBoxDefaultPressure);
 
+    statusbar = statusBar();
+
     // connect menu actions
     connect(findChild<QAction *>("action_apply_all"), &QAction::triggered,
             std::bind(&VeikkParms::applyConfig, &currentParms,
@@ -172,6 +175,11 @@ QRect MainWindow::getScreenMapParms() {
         screenMapWidthSpinBox->value(),
         screenMapHeightSpinBox->value()
     };
+}
+
+// update statusbar -- happens any time an update or save/apply happens
+void MainWindow::updateStatus() {
+    //if(currentParms == )
 }
 
 // on screen size changed; update screen size form, sync with currentParms,

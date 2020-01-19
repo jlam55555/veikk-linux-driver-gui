@@ -49,6 +49,7 @@ private:
     QLineEdit *screenWidthLineEdit, *screenHeightLineEdit;
     QCheckBox *screenDefaultMap;
     QComboBox *screenOrientation, *pressureMapDefaults;
+    QStatusBar *statusbar;
 
     // handlers
     void showEvent(QShowEvent *evt) override;
@@ -57,6 +58,8 @@ private:
     // composite parameter value getters
     void getPressureCoefs(qint16 *coefs);
     QRect getScreenMapParms();
+
+    void updateStatus();
 
 public slots:
     void screenSizeChanged(QRect newScreenSize);
