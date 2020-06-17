@@ -54,6 +54,12 @@ recommended; this should come bundled with Qt.) Run:
 qmake && make all clean
 ```
 
+If this fails to build, you can cleanup, and then ensure you are using the correct qmake by re-running with this:
+```
+make clean
+QT_SELECT=5 qmake && make all clean
+```
+
 This should generate the binary. **Make sure to run it as root, or else you
 will not be able to edit the module parameters in sysfs.**
 
