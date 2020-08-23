@@ -1,4 +1,4 @@
-QT       += core gui
+QT       += core gui dbus
 
 greaterThan(QT_MAJOR_VERSION, 4): QT += widgets
 
@@ -21,6 +21,9 @@ SOURCES += \
     qpressurecurvescene.cpp \
     qscreenmapscene.cpp \
     veikkconfig.cpp \
+    veikkctl_dbus_server.cpp \
+    veikkctl_dbus_util.cpp \
+    veikkctl_mapper.cpp \
     veikkparms.cpp
 
 HEADERS += \
@@ -28,10 +31,18 @@ HEADERS += \
     qpressurecurvescene.h \
     qscreenmapscene.h \
     veikkconfig.h \
+    veikkctl_dbus_server.h \
+    veikkctl_dbus_util.h \
     veikkparms.h
 
 FORMS += \
     main.ui
+
+CONFIG += \
+    link_pkgconfig
+
+PKGCONFIG += \
+    libevdev
 
 # Default rules for deployment.
 qnx: target.path = /tmp/$${TARGET}/bin
