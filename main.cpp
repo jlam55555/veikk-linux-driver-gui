@@ -62,36 +62,40 @@ int main(int argc, char *argv[])
 {
 	QApplication app{argc, argv};
 	QCommandLineParser parser;
+	QString command;
 
 	app.setApplicationName("veikkctl");
 	app.setApplicationVersion("v3-alpha");
 
-	// very simple command-line parsing; only chooses the first option
-	// in the list below if multiple options are set
 	parser.setApplicationDescription("VEIKK Digitizer Configuration Tool");
-	parser.addHelpOption();
-	parser.addVersionOption();
-	parser.addOptions({
-		{{"s", "start"}, "Start mapping daemon"},
-		{{"q", "quit"}, "Quit mapping daemon"},
-		{{"r", "reload"}, "New device or configuration change"},
-		{{"g", "gui"}, "Start configuration GUI"}
-	});
+	parser.addPositionalArgument("ACTION",
+			"The action to perform. This can be one of:\n"
+			"  start    Start daemon\n"
+			"  quit     Stop daemon\n"
+			"  reload   Reload daemon\n"
+			"  gui      Launch configuration GUI\n"
+			"  help     Show this help menu\n"
+			"  version  Show version info\n");
 	parser.process(app);
 
-	if (parser.optionNames().size() > 1) {
-		qWarning() << "only one option can be set at a time";
-		return -1;
+	if (parser.positionalArguments().length() == 0) {
+		parser.showHelp();
+		return 0;
 	}
+	command = parser.positionalArguments().first();
 
-	if (parser.isSet("start"))
+	if (command == "start")
 		return startVeikkCtlDaemon(app);
-	if (parser.isSet("quit"))
+	if (command == "quit")
 		return quitVeikkCtlDaemon();
-	if (parser.isSet("reload"))
+	if (command == "reload")
 		return reloadVeikkCtlDaemon(app);
-	if (parser.isSet("gui"))
+	if (command == "gui")
 		return startConfigurationGui(app);
+	if (command == "version") {
+		parser.showVersion();
+		return 0;
+	}
 
 	// if no options selected, show help menu
 	parser.showHelp();
