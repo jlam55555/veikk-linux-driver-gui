@@ -14,17 +14,17 @@
 #include <QtDBus>
 
 #define VEIKKCTL_DBUS_SERVICE_NAME	"com.veikk.VeikkCtl"
-#define VEIKKCTL_DBUS_INTERFACE_NAME	"VeikkCtl.Server"
-#define VEIKKCTL_DBUS_OBJECT_PATH	"/VeikkCtl/Server"
+#define VEIKKCTL_DBUS_OBJECT_PATH	"/com/veikk/VeikkCtl"
+#define VEIKKCTL_DBUS_INTERFACE_NAME	"com.veikk.VeikkCtl"
 
 class VeikkDBusServer : public QObject
 {
 	Q_OBJECT
 
-	QApplication &app;
+	QCoreApplication &app;
 
 public:
-	VeikkDBusServer(QApplication &app);
+	VeikkDBusServer(QCoreApplication &app);
 
 public slots:
 	void reload();

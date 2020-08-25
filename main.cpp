@@ -1,134 +1,99 @@
-#include "unistd.h"
 #include "veikkconfig.h"
 #include "veikkctl_dbus_util.h"
+#include "veikkctl_daemon.h"
 #include <QApplication>
-#include <QtDBus>
 #include <QDebug>
 
-#define VEIKKCTL_VERSION "v3-alpha"
-
-void printHelpMenu()
+// starts up veikk dbus daemon and mapping threads
+static int startVeikkCtlDaemon(QCoreApplication &app)
 {
-	// TODO: add configuration commands
-	qInfo() <<
-"veikkctl -- configuration utility for VEIKK digitizers\n"
-"(for use in conjunction with the VEIKK Linux driver v3+)\n"
-"Usage: veikkctl [COMMAND] [ADDITIONAL ARGS...], where COMMAND is one of:\n"
-"\tstart\tStart VEIKK daemon\n"
-"\tstop\tStop VEIKK daemon\n"
-"\treload\tNew VEIKK device added or config changed\n"
-"\thelp\tShow this help menu\n"
-"\tversion\tShow version info\n\n";
+	int err;
+	VeikkDBusServer server{app};
+
+	if ((err = VeikkCtlDaemon::registerDBusServerObject(server)))
+		return err;
+
+	if ((err = VeikkCtlDaemon::startMappingThreads()))
+		return err;
+
+	return app.exec();
 }
 
-void printVersionInfo()
+// sends a message to the daemon to quit
+static int quitVeikkCtlDaemon()
 {
-	qInfo() << "veikkctl " << VEIKKCTL_VERSION;
-}
+	QDBusInterface *intf = VeikkDBusUtil::getInterface();
 
-int startVeikkDaemon()
-{
-	int argc = 1;
-	char *argv[] = {"veikkctl", NULL};
-
-	QApplication app{argc, argv};
-
-	// connect to dbus session bus
-	QDBusConnection conn = QDBusConnection::sessionBus();
-	QDBusConnectionInterface *dbusConnIntf = conn.interface();
-	QDBusMessage pingMessage;
-
-	// check if service is already registered
-	if (dbusConnIntf->isServiceRegistered("com.veikk.VeikkCtl")) {
-		qWarning() << "veikkctl is already running";
+	if (!VeikkDBusUtil::isDaemonRunning()) {
+		qWarning() << "veikkctl daemon not running. nothing to do";
 		return -1;
 	}
 
-	// register service
-	bool isRegistered = conn.registerService("com.veikk.VeikkCtl");
-	if (!isRegistered) {
-		qCritical() << "failed to register dbus service";
-		return -1;
-	}
-
-	// register object
-	conn.registerObject("/Server", "com.veikk.VeikkServerInterface",
-			new VeikkDBusServer{app},
-			QDBusConnection::ExportAllSlots);
-
-	// check if server name is owned; attempt to call its ping method
-
-	app.exec();
-
-
-	// attempt to own server name
-
-	// if not successful, die and return error
-
-	// if successful, fork and launch daemon
+	intf->call("stop");
+	delete intf;
 	return 0;
 }
 
-/*int stopVeikkDaemon()
+// sends a message to daemon to reload mapping threads
+static int reloadVeikkCtlDaemon(QCoreApplication &app)
 {
-	QDBusConnection conn = QDBusConnection::sessionBus();
-	QDBusConnectionInterface *dbusConnIntf = conn.interface();
-	QDBusInterface veikkctlIntf{"com.veikk.VeikkCtl", "/Server",
-			"com.veikk.VeikkServerInterface", conn};
+	QDBusInterface *intf = VeikkDBusUtil::getInterface();
 
-	// check if daemon is running; warn if it's not
-	if (!dbusConnIntf->isServiceRegistered("com.veikk.VeikkCtl")) {
-		qWarning() << "veikkctl is not running";
-		return -1;
+	if (!VeikkDBusUtil::isDaemonRunning()) {
+		qWarning() << "veikkctl daemon not running. starting it now";
+		return startVeikkCtlDaemon(app);
 	}
 
-	veikkctlIntf.call("testping");
+	intf->call("reload");
+	delete intf;
 	return 0;
 }
 
-int reload_veikk_daemon()
+// runs the configuration gui
+static int startConfigurationGui(QApplication &app)
 {
-	// connect to dbs daemon
+	MainWindow win;
 
-	// check if server name is owned
-
-	// if server name is owned, kill it
-
-	// start daemon
-	return 0;
-}*/
+	win.show();
+	return app.exec();
+}
 
 int main(int argc, char *argv[])
 {
-	const char *cmd;
+	QApplication app{argc, argv};
+	QCommandLineParser parser;
 
-	if (argc < 2) {
-		printHelpMenu();
-		return 0;
+	app.setApplicationName("veikkctl");
+	app.setApplicationVersion("v3-alpha");
+
+	// very simple command-line parsing; only chooses the first option
+	// in the list below if multiple options are set
+	parser.setApplicationDescription("VEIKK Digitizer Configuration Tool");
+	parser.addHelpOption();
+	parser.addVersionOption();
+	parser.addOptions({
+		{{"s", "start"}, "Start mapping daemon"},
+		{{"q", "quit"}, "Quit mapping daemon"},
+		{{"r", "reload"}, "New device or configuration change"},
+		{{"g", "gui"}, "Start configuration GUI"}
+	});
+	parser.process(app);
+
+	if (parser.optionNames().size() > 1) {
+		qWarning() << "only one option can be set at a time";
+		return -1;
 	}
-	cmd = argv[1];
 
-	//QApplication app{argc, argv};
-	if (!strncmp(cmd, "start", strlen("start"))) {
-		return VeikkDBusUtil::startDaemon();
-		//startVeikkDaemon();
-	} else if (!strncmp(cmd, "stop", strlen("stop"))) {
-		return VeikkDBusUtil::stopDaemon();
-	} else if (!strncmp(cmd, "reload", strlen("reload"))) {
-		// reload veikk daemon
-	} else if (!strncmp(cmd, "version", strlen("version"))) {
-		printVersionInfo();
-		return 0;
-	} else {
-		printHelpMenu();
-		return 0;
-	}
+	if (parser.isSet("start"))
+		return startVeikkCtlDaemon(app);
+	if (parser.isSet("quit"))
+		return quitVeikkCtlDaemon();
+	if (parser.isSet("reload"))
+		return reloadVeikkCtlDaemon(app);
+	if (parser.isSet("gui"))
+		return startConfigurationGui(app);
 
-	// TODO: check if user is root; if not, issue warning
-	if(geteuid()) {}
-
-	//MainWindow win;
-	//win.show();
-	//return app.exec();
+	// if no options selected, show help menu
+	parser.showHelp();
 	return 0;
 }

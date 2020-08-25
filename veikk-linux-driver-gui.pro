@@ -21,6 +21,7 @@ SOURCES += \
     qpressurecurvescene.cpp \
     qscreenmapscene.cpp \
     veikkconfig.cpp \
+    veikkctl_daemon.cpp \
     veikkctl_dbus_server.cpp \
     veikkctl_dbus_util.cpp \
     veikkctl_mapper.cpp \
@@ -31,6 +32,7 @@ HEADERS += \
     qpressurecurvescene.h \
     qscreenmapscene.h \
     veikkconfig.h \
+    veikkctl_daemon.h \
     veikkctl_dbus_server.h \
     veikkctl_dbus_util.h \
     veikkparms.h

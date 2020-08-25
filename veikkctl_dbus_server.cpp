@@ -1,6 +1,7 @@
 #include "veikkctl_dbus_server.h"
+#include "veikkctl_dbus_util.h"
 
-VeikkDBusServer::VeikkDBusServer(QApplication &app) : app{app} {}
+VeikkDBusServer::VeikkDBusServer(QCoreApplication &app) : app{app} { }
 
 void VeikkDBusServer::reload()
 {
@@ -11,8 +12,7 @@ void VeikkDBusServer::reload()
 
 void VeikkDBusServer::stop()
 {
-	qInfo() << "In stop()";
+	// can perform other cleanup actions in mapping daemons here
 
-	// quit veikk daemon
 	app.quit();
 }

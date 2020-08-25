@@ -1,8 +1,5 @@
 /*
- * veikkctl_dbus_util.h -- manage dbus server
- *
- * This class provides the methods to start the veikkctl dbus daemon, and to
- * send controls to it.
+ * veikkctl_dbus_util.h -- helper functions for dbus connection
  *
  * Since this is just a collection of methods, it does not subclass QObject.
  */
@@ -14,13 +11,12 @@
 
 class VeikkDBusUtil
 {
-	static QDBusInterface *getInterface();
-	static bool isDaemonRunning();
-
 public:
-	static bool startDaemon();
-	static bool reloadDaemon();
-	static bool stopDaemon();
+	// get veikkctl dbus interface
+	static QDBusInterface *getInterface();
+
+	// check if dbus server (and veikkctl daemon) is running
+	static bool isDaemonRunning();
 
 	// a collection of utility fns doesn't need a constructor
 	VeikkDBusUtil() = delete;
