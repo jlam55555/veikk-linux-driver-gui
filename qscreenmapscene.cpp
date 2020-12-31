@@ -8,7 +8,7 @@ QScreenMapScene::QScreenMapScene(QScreen *screen)
     : QGraphicsScene{}, screen{screen} {
     QTimer *timer;
 
-    setSceneRect(screen->geometry());
+    setSceneRect(screen->virtualGeometry());
 
     // initialize screen pixmap
     pixmapItem = new QGraphicsPixmapItem{QPixmap{0, 0}};
@@ -31,6 +31,9 @@ void QScreenMapScene::updateScreenMapPreview() {
     QPixmap pixmap = screen->grabWindow(0).scaled(sceneRect().size().toSize(),
                                                   Qt::KeepAspectRatio,
                                                   Qt::FastTransformation);
+    int32_t x1, y1, x2, y2;
+    screen->geometry().getCoords(&x1, &y1, &x2, &y2);
+    pixmapItem->setOffset(x1, y1);
     pixmapItem->setPixmap(pixmap);
 }
 
