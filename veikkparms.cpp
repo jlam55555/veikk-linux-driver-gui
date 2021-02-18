@@ -87,7 +87,7 @@ VeikkParms::VPStatus VeikkParms::loadFromFile(QString src) {
     };
     sm = QRect {
         settings.value("screen_map/x").toInt(),
-        settings.value("screen_map/x").toInt(),
+        settings.value("screen_map/y").toInt(),
         settings.value("screen_map/width").toInt(),
         settings.value("screen_map/height").toInt()
     };
