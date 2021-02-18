@@ -8,7 +8,7 @@ QScreenMapScene::QScreenMapScene(QScreen *screen)
     : QGraphicsScene{}, screen{screen} {
     QTimer *timer;
 
-    setSceneRect(screen->geometry());
+    setSceneRect(screen->virtualGeometry());
 
     // initialize screen pixmap
     pixmapItem = new QGraphicsPixmapItem{QPixmap{0, 0}};
@@ -23,12 +23,12 @@ QScreenMapScene::QScreenMapScene(QScreen *screen)
 
     // set up selection rectangle
     isSelecting = false;
-    selectionRect = addRect(screen->geometry());
+    selectionRect = addRect(screen->virtualGeometry());
     selectionRect->setBrush(QBrush{QColor{255, 0, 0, 50}});
 }
 
 void QScreenMapScene::updateScreenMapPreview() {
-    QPixmap pixmap = screen->grabWindow(0).scaled(sceneRect().size().toSize(),
+    QPixmap pixmap = screen->grabWindow(0, -screen->geometry().x(), -screen->geometry().y(), screen->virtualSize().width(), screen->virtualSize().height()).scaled(sceneRect().size().toSize(),
                                                   Qt::KeepAspectRatio,
                                                   Qt::FastTransformation);
     pixmapItem->setPixmap(pixmap);

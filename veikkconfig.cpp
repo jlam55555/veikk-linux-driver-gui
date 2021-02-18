@@ -69,8 +69,8 @@ MainWindow::MainWindow(QWidget *parent)
         connect(screenMapSpinboxes[i],
                 QOverload<int>::of(&QSpinBox::valueChanged),
                 this, &MainWindow::updateScreenMapParms);
-    screenSizeChanged(screen->geometry());
-    updateScreenMapForm(screen->geometry());
+    screenSizeChanged(screen->virtualGeometry());
+    updateScreenMapForm(screen->virtualGeometry());
 
     screenOrientation = findChild<QComboBox *>("screen_orientation");
     screenOrientation->addItem("Default");
@@ -184,11 +184,11 @@ void MainWindow::updateStatus() { }
 void MainWindow::screenSizeChanged(QRect newScreenSize) {
     screenWidthLineEdit->setText(QString::number(newScreenSize.width()));
     screenHeightLineEdit->setText(QString::number(newScreenSize.height()));
-    currentParms.setScreenSize(screen->geometry());
+    currentParms.setScreenSize(screen->virtualGeometry());
 
     // fitInView() only works if sceneRect is within scene's sceneRect,
     // so resize scene's sceneRect first
-    screenMapView->scene()->setSceneRect(screen->geometry());
+    screenMapView->scene()->setSceneRect(screen->virtualGeometry());
     screenMapView->fitInView(screenMapView->scene()->sceneRect());
 }
 
@@ -238,7 +238,7 @@ void MainWindow::updateScreenMapForm(QRect newScreenMap) {
     screenMapHeightSpinBox->setValue(newScreenMap.height());
     for(i=0; i<4; i++)
         screenMapSpinboxes[i]->blockSignals(false);
-    screenDefaultMap->setCheckState(newScreenMap==screen->geometry()
+    screenDefaultMap->setCheckState(newScreenMap==screen->virtualGeometry()
                                     ? Qt::Checked
                                     : Qt::Unchecked);
     currentParms.setScreenMap(getScreenMapParms());
@@ -248,7 +248,7 @@ void MainWindow::updateScreenMapForm(QRect newScreenMap) {
 // currentParms with new screen map form values
 void MainWindow::updateScreenMapParms() {
     QRect newScreenMap = getScreenMapParms();
-    screenDefaultMap->setCheckState(newScreenMap==screen->geometry()
+    screenDefaultMap->setCheckState(newScreenMap==screen->virtualGeometry()
                                     ? Qt::Checked
                                     : Qt::Unchecked);
     currentParms.setScreenMap(newScreenMap);
@@ -260,8 +260,8 @@ void MainWindow::updateScreenMapParms() {
 void MainWindow::setDefaultScreenMap(int checkState) {
     if(checkState == Qt::Unchecked)
         return;
-    updateScreenMapForm(screen->geometry());
-    emit updateScreenMapRect(screen->geometry());
+    updateScreenMapForm(screen->virtualGeometry());
+    emit updateScreenMapRect(screen->virtualGeometry());
 }
 
 // callback for selecting a new pressure mapping default from the combobox
