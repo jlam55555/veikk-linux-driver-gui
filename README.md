@@ -1,3 +1,10 @@
+# An [official driver][official-driver] has been released by VEIKK.
+
+This project should provide basic functionality for tablets but is no longer
+actively maintained. The original author is too busy with school/work.
+
+---
+
 # VEIKK Linux Driver Configuration Tool
 A graphical configuration tool to easily customize the module parameters for the
 [VEIKK Linux Driver][1] (v2.0) for [VEIKK][0]-brand drawing tablets.
@@ -93,3 +100,4 @@ at gmail dot com.
 [9]: ./veikk_modparms.c
 [10]: https://github.com/jlam55555/veikk-linux-driver-gui
 [11]: https://i.imgur.com/Mug8gRn.jpg
+[official-driver]: https://github.com/jlam55555/veikk-linux-driver/issues/71
