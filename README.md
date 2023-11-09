@@ -61,11 +61,26 @@ recommended; this should come bundled with Qt.) Run:
 qmake && make all clean
 ```
 
+If this fails to build, you can cleanup, and then ensure you are using the correct qmake by re-running with this:
+
+```bash
+make clean
+QT_SELECT=5 qmake && make all clean
+```
+
 This should generate the binary. **Make sure to run it as root, or else you
 will not be able to edit the module parameters in sysfs.**
 
 ```bash
 sudo ./veikk-linux-driver-gui
+```
+
+If this fails to connect to the display when runing as root, ensure that root
+is able to use your display, and then re-run with with the correct DISPLAY var:
+
+```bash
+xhost local:root
+sudo DISPLAY=$DISPLAY sudo ./veikk-linux-driver-gui
 ```
 
 Enjoy configuring your driver!
